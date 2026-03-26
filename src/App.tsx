@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -105,8 +105,102 @@ const getIconForCategory = (category: Category) => {
 };
 
 
+const dropPinIcon = L.divIcon({
+  className: 'bg-transparent border-none',
+  html: `
+    <div class="relative -mt-10 -ml-5 animate-bounce">
+      <div class="w-10 h-10 bg-[#d7827e] text-[#faf4ed] rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+        <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">add_location</span>
+      </div>
+      <div class="w-2 h-2 bg-[#d7827e] rounded-full mx-auto mt-0.5 opacity-40"></div>
+    </div>
+  `,
+  iconSize: [40, 48],
+  iconAnchor: [20, 48],
+});
+
+
+function MapClickHandler({ active, onMapClick }: { active: boolean; onMapClick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      if (active) {
+        onMapClick(e.latlng.lat, e.latlng.lng);
+      }
+    },
+  });
+  return null;
+}
+
+
+const categoryOptions: { id: Category; icon: string; label: string }[] = [
+  { id: 'furniture', icon: 'chair', label: 'Furniture' },
+  { id: 'clothing', icon: 'apparel', label: 'Clothing' },
+  { id: 'entertainment', icon: 'movie', label: 'Media & Games' },
+  { id: 'pets', icon: 'pets', label: 'Pets' },
+  { id: 'kids', icon: 'child_care', label: 'Kids' },
+];
+
+
 export default function App() {
+  const [items, setItems] = useState<GiveawayItem[]>(mockItems);
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all');
+  const [placingPin, setPlacingPin] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [newPinLocation, setNewPinLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [formData, setFormData] = useState({ title: '', description: '', category: 'furniture' as Category, locationDetails: '' });
+  const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+  const titleInputRef = useRef<HTMLInputElement>(null);
+
+
+  const startAddFlow = () => {
+    setPlacingPin(true);
+    setNewPinLocation(null);
+    setShowForm(false);
+    setFormData({ title: '', description: '', category: 'furniture', locationDetails: '' });
+    setFormErrors({});
+  };
+
+  const handleMapClick = (lat: number, lng: number) => {
+    if (!placingPin) return;
+    setNewPinLocation({ lat, lng });
+    setPlacingPin(false);
+    setShowForm(true);
+    setTimeout(() => titleInputRef.current?.focus(), 100);
+  };
+
+  const cancelAdd = () => {
+    setPlacingPin(false);
+    setShowForm(false);
+    setNewPinLocation(null);
+    setFormErrors({});
+  };
+
+  const submitItem = () => {
+    const errors: Record<string, boolean> = {};
+    if (!formData.title.trim()) errors.title = true;
+    if (!formData.description.trim()) errors.description = true;
+    if (!formData.locationDetails.trim()) errors.locationDetails = true;
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    if (!newPinLocation) return;
+
+    const newItem: GiveawayItem = {
+      id: Date.now().toString(),
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      lat: newPinLocation.lat,
+      lng: newPinLocation.lng,
+      category: formData.category,
+      timePosted: 'Just now',
+      locationDetails: formData.locationDetails.trim(),
+    };
+    setItems(prev => [newItem, ...prev]);
+    setShowForm(false);
+    setNewPinLocation(null);
+    setFormErrors({});
+  };
 
 
   useEffect(() => {
@@ -127,9 +221,9 @@ export default function App() {
   }, []);
 
 
-  const filteredItems = activeCategory === 'all' 
-    ? mockItems 
-    : mockItems.filter(item => item.category === activeCategory);
+  const filteredItems = activeCategory === 'all'
+    ? items
+    : items.filter(item => item.category === activeCategory);
 
 
   return (
@@ -140,6 +234,11 @@ export default function App() {
         .leaflet-popup-content-wrapper { background-color: #fffaf3; color: #575279; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .leaflet-popup-tip { background-color: #fffaf3; }
         .leaflet-container { font-family: 'Inter', sans-serif; }
+        .leaflet-container.pin-drop-mode { cursor: crosshair !important; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out; }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out; }
       `}</style>
 
 
@@ -153,7 +252,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-4 md:gap-6">
-          <button className="hidden md:block bg-[#d7827e] text-[#faf4ed] px-6 py-2 rounded-lg font-serif font-medium text-sm hover:opacity-90 active:scale-95 transition-all">
+          <button onClick={startAddFlow} className="hidden md:block bg-[#d7827e] text-[#faf4ed] px-6 py-2 rounded-lg font-serif font-medium text-sm hover:opacity-90 active:scale-95 transition-all">
             List Your Giveaway
           </button>
           <div className="flex items-center gap-4 text-[#575279]/70">
@@ -221,7 +320,7 @@ export default function App() {
         </aside>
 
 
-        <main className="flex-1 relative bg-[#faf4ed] w-full z-0" style={{ minHeight: 0 }}>
+        <main className={`flex-1 relative bg-[#faf4ed] w-full z-0 ${placingPin ? '[&_.leaflet-container]:cursor-crosshair' : ''}`} style={{ minHeight: 0 }}>
 
           <MapContainer
             center={WOODSTOCK_CENTER}
@@ -234,9 +333,11 @@ export default function App() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
             
+            <MapClickHandler active={placingPin} onMapClick={handleMapClick} />
+
             {filteredItems.map(item => (
-              <Marker 
-                key={item.id} 
+              <Marker
+                key={item.id}
                 position={[item.lat, item.lng]}
                 icon={getIconForCategory(item.category)}
               >
@@ -255,6 +356,10 @@ export default function App() {
                 </Popup>
               </Marker>
             ))}
+
+            {newPinLocation && (
+              <Marker position={[newPinLocation.lat, newPinLocation.lng]} icon={dropPinIcon} />
+            )}
           </MapContainer>
 
 
@@ -265,19 +370,138 @@ export default function App() {
           </div>
 
 
-          <div className="hidden md:flex absolute bottom-8 left-8 right-8 z-10 pointer-events-none justify-between items-end gap-10">
-            <div className="w-full max-w-2xl flex gap-6 pointer-events-auto">
-               <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/50 flex gap-4 items-center group cursor-pointer hover:bg-white transition-all hover:-translate-y-1 flex-1">
-                  <div className="w-16 h-16 rounded-lg bg-[#f4ede8] flex items-center justify-center text-[#d7827e] flex-shrink-0">
-                    <span className="material-symbols-outlined text-3xl">add_box</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-serif font-semibold">Leaving something out?</h4>
-                    <p className="text-xs text-[#9893a5] mt-0.5">Drop a pin to let neighbors know.</p>
-                  </div>
-               </div>
+          {/* Pin drop mode banner */}
+          {placingPin && (
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 animate-slide-up">
+              <div className="bg-[#d7827e] text-[#faf4ed] px-6 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <span className="material-symbols-outlined animate-bounce">add_location</span>
+                <span className="font-serif font-medium text-sm">Tap the map to drop your pin</span>
+                <button onClick={cancelAdd} className="ml-2 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+
+          {/* Add item form modal */}
+          {showForm && newPinLocation && (
+            <div className="absolute inset-0 z-20 flex items-end md:items-center justify-center animate-fade-in">
+              <div className="absolute inset-0 bg-[#575279]/20 backdrop-blur-sm" onClick={cancelAdd} />
+              <div className="relative bg-[#fffaf3] w-full max-w-md mx-4 mb-0 md:mb-0 rounded-t-3xl md:rounded-3xl shadow-2xl border border-[#ebe4df]/50 animate-slide-up max-h-[85vh] overflow-y-auto">
+                {/* Header */}
+                <div className="sticky top-0 bg-[#fffaf3] rounded-t-3xl px-6 pt-6 pb-4 border-b border-[#ebe4df]/50 z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-serif font-semibold text-[#575279]">List your giveaway</h3>
+                      <p className="text-xs text-[#9893a5] mt-0.5">Pin dropped — now add the details.</p>
+                    </div>
+                    <button onClick={cancelAdd} className="w-8 h-8 rounded-full bg-[#f4ede8] flex items-center justify-center text-[#9893a5] hover:text-[#575279] hover:bg-[#ebe4df] transition-all">
+                      <span className="material-symbols-outlined text-sm">close</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="px-6 py-5 space-y-5">
+                  {/* Title */}
+                  <div>
+                    <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-2">What are you giving away?</label>
+                    <input
+                      ref={titleInputRef}
+                      type="text"
+                      placeholder="e.g. Oak Writing Desk"
+                      value={formData.title}
+                      onChange={e => { setFormData(d => ({ ...d, title: e.target.value })); setFormErrors(e2 => ({ ...e2, title: false })); }}
+                      className={`w-full bg-white border ${formErrors.title ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-sm font-serif focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
+                    />
+                    {formErrors.title && <p className="text-[11px] text-[#d7827e] mt-1">Please add a title</p>}
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-2">Description</label>
+                    <textarea
+                      placeholder="Condition, quantity, any notes for neighbours..."
+                      rows={3}
+                      value={formData.description}
+                      onChange={e => { setFormData(d => ({ ...d, description: e.target.value })); setFormErrors(e2 => ({ ...e2, description: false })); }}
+                      className={`w-full bg-white border ${formErrors.description ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50 resize-none`}
+                    />
+                    {formErrors.description && <p className="text-[11px] text-[#d7827e] mt-1">Please add a description</p>}
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-2">Category</label>
+                    <div className="flex flex-wrap gap-2">
+                      {categoryOptions.map(cat => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setFormData(d => ({ ...d, category: cat.id }))}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all
+                            ${formData.category === cat.id
+                              ? 'bg-[#d7827e] text-[#faf4ed] border-[#d7827e] shadow-sm'
+                              : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#d7827e]/30 hover:text-[#575279]'
+                            }`}
+                        >
+                          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>{cat.icon}</span>
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Location details */}
+                  <div>
+                    <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-2">Location hint</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. By the front gate on Park Street"
+                      value={formData.locationDetails}
+                      onChange={e => { setFormData(d => ({ ...d, locationDetails: e.target.value })); setFormErrors(e2 => ({ ...e2, locationDetails: false })); }}
+                      className={`w-full bg-white border ${formErrors.locationDetails ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
+                    />
+                    {formErrors.locationDetails && <p className="text-[11px] text-[#d7827e] mt-1">Please add a location hint</p>}
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <div className="sticky bottom-0 bg-[#fffaf3] px-6 py-5 border-t border-[#ebe4df]/50 rounded-b-3xl">
+                  <button
+                    onClick={submitItem}
+                    className="w-full bg-[#d7827e] text-[#faf4ed] py-3.5 rounded-xl font-serif font-semibold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                    List for neighbours
+                  </button>
+                  <button
+                    onClick={cancelAdd}
+                    className="w-full text-[#9893a5] py-2 mt-2 text-xs hover:text-[#575279] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+          {/* Desktop add card */}
+          {!placingPin && !showForm && (
+            <div className="hidden md:flex absolute bottom-8 left-8 right-8 z-10 pointer-events-none justify-between items-end gap-10">
+              <div className="w-full max-w-2xl flex gap-6 pointer-events-auto">
+                 <div onClick={startAddFlow} className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/50 flex gap-4 items-center group cursor-pointer hover:bg-white transition-all hover:-translate-y-1 flex-1">
+                    <div className="w-16 h-16 rounded-lg bg-[#f4ede8] flex items-center justify-center text-[#d7827e] flex-shrink-0 group-hover:bg-[#d7827e] group-hover:text-[#faf4ed] transition-colors">
+                      <span className="material-symbols-outlined text-3xl">add_box</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-serif font-semibold">Leaving something out?</h4>
+                      <p className="text-xs text-[#9893a5] mt-0.5">Drop a pin to let neighbours know.</p>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
@@ -291,7 +515,7 @@ export default function App() {
           <span className="material-symbols-outlined">format_list_bulleted</span>
           <span className="text-[9px] font-semibold tracking-wider uppercase">List</span>
         </a>
-        <div className="w-14 h-14 bg-[#d7827e] rounded-full -mt-12 flex items-center justify-center text-[#faf4ed] shadow-xl ring-4 ring-[#faf4ed]">
+        <div onClick={startAddFlow} className="w-14 h-14 bg-[#d7827e] rounded-full -mt-12 flex items-center justify-center text-[#faf4ed] shadow-xl ring-4 ring-[#faf4ed] cursor-pointer active:scale-90 transition-transform">
           <span className="material-symbols-outlined text-2xl">add</span>
         </div>
         <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
