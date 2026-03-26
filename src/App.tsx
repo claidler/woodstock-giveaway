@@ -145,7 +145,7 @@ export default function App() {
 
       <nav className="fixed top-0 w-full z-50 bg-[#faf4ed]/80 backdrop-blur-xl flex justify-between items-center px-4 md:px-8 h-20 shadow-none border-b border-[#ebe4df]/50">
         <div className="flex items-center gap-12">
-          <span className="text-2xl font-serif italic font-semibold text-[#d7827e] tracking-tight">The Common</span>
+          <span className="text-2xl font-serif italic font-semibold text-[#d7827e] tracking-tight">The Woodstock Giveaway</span>
           <div className="hidden md:flex gap-8 items-center">
             <a href="#" className="text-[#d7827e] border-b border-[#d7827e] pb-1 font-serif font-medium tracking-tight">Woodstock Map</a>
             <a href="#" className="text-[#575279] opacity-70 font-serif font-medium tracking-tight hover:opacity-100 hover:text-[#d7827e] transition-all">My Street</a>
