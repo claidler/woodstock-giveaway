@@ -370,13 +370,13 @@ export default function App() {
           </div>
 
 
-          {/* Pin drop mode banner */}
+          {/* Pin drop mode banner — fixed so it floats above everything on mobile */}
           {placingPin && (
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10 animate-slide-up">
-              <div className="bg-[#d7827e] text-[#faf4ed] px-6 py-3 rounded-2xl shadow-lg flex items-center gap-3">
-                <span className="material-symbols-outlined animate-bounce">add_location</span>
+            <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[60] animate-slide-up">
+              <div className="bg-[#d7827e] text-[#faf4ed] px-5 py-3 rounded-2xl shadow-lg flex items-center gap-3 whitespace-nowrap">
+                <span className="material-symbols-outlined animate-bounce text-xl">add_location</span>
                 <span className="font-serif font-medium text-sm">Tap the map to drop your pin</span>
-                <button onClick={cancelAdd} className="ml-2 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                <button onClick={cancelAdd} className="ml-1 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors">
                   <span className="material-symbols-outlined text-sm">close</span>
                 </button>
               </div>
@@ -384,25 +384,31 @@ export default function App() {
           )}
 
 
-          {/* Add item form modal */}
+          {/* Add item form modal — fixed fullscreen overlay so it sits above the mobile tab bar */}
           {showForm && newPinLocation && (
-            <div className="absolute inset-0 z-20 flex items-end md:items-center justify-center animate-fade-in">
+            <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center animate-fade-in">
               <div className="absolute inset-0 bg-[#575279]/20 backdrop-blur-sm" onClick={cancelAdd} />
-              <div className="relative bg-[#fffaf3] w-full max-w-md mx-4 mb-0 md:mb-0 rounded-t-3xl md:rounded-3xl shadow-2xl border border-[#ebe4df]/50 animate-slide-up max-h-[85vh] overflow-y-auto">
+              <div className="relative bg-[#fffaf3] w-full max-w-md md:mx-4 rounded-t-3xl md:rounded-3xl shadow-2xl border border-[#ebe4df]/50 animate-slide-up max-h-[90vh] md:max-h-[85vh] flex flex-col">
+                {/* Drag handle for mobile */}
+                <div className="md:hidden flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-[#ebe4df]" />
+                </div>
+
                 {/* Header */}
-                <div className="sticky top-0 bg-[#fffaf3] rounded-t-3xl px-6 pt-6 pb-4 border-b border-[#ebe4df]/50 z-10">
+                <div className="bg-[#fffaf3] rounded-t-3xl px-5 md:px-6 pt-3 md:pt-6 pb-4 border-b border-[#ebe4df]/50 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-serif font-semibold text-[#575279]">List your giveaway</h3>
                       <p className="text-xs text-[#9893a5] mt-0.5">Pin dropped — now add the details.</p>
                     </div>
-                    <button onClick={cancelAdd} className="w-8 h-8 rounded-full bg-[#f4ede8] flex items-center justify-center text-[#9893a5] hover:text-[#575279] hover:bg-[#ebe4df] transition-all">
+                    <button onClick={cancelAdd} className="w-8 h-8 rounded-full bg-[#f4ede8] flex items-center justify-center text-[#9893a5] hover:text-[#575279] hover:bg-[#ebe4df] active:scale-95 transition-all">
                       <span className="material-symbols-outlined text-sm">close</span>
                     </button>
                   </div>
                 </div>
 
-                <div className="px-6 py-5 space-y-5">
+                {/* Scrollable form body */}
+                <div className="flex-1 overflow-y-auto overscroll-contain px-5 md:px-6 py-5 space-y-5">
                   {/* Title */}
                   <div>
                     <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-2">What are you giving away?</label>
@@ -412,7 +418,7 @@ export default function App() {
                       placeholder="e.g. Oak Writing Desk"
                       value={formData.title}
                       onChange={e => { setFormData(d => ({ ...d, title: e.target.value })); setFormErrors(e2 => ({ ...e2, title: false })); }}
-                      className={`w-full bg-white border ${formErrors.title ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-sm font-serif focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
+                      className={`w-full bg-white border ${formErrors.title ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm font-serif focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
                     />
                     {formErrors.title && <p className="text-[11px] text-[#d7827e] mt-1">Please add a title</p>}
                   </div>
@@ -422,10 +428,10 @@ export default function App() {
                     <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-2">Description</label>
                     <textarea
                       placeholder="Condition, quantity, any notes for neighbours..."
-                      rows={3}
+                      rows={2}
                       value={formData.description}
                       onChange={e => { setFormData(d => ({ ...d, description: e.target.value })); setFormErrors(e2 => ({ ...e2, description: false })); }}
-                      className={`w-full bg-white border ${formErrors.description ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50 resize-none`}
+                      className={`w-full bg-white border ${formErrors.description ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50 resize-none`}
                     />
                     {formErrors.description && <p className="text-[11px] text-[#d7827e] mt-1">Please add a description</p>}
                   </div>
@@ -438,7 +444,7 @@ export default function App() {
                         <button
                           key={cat.id}
                           onClick={() => setFormData(d => ({ ...d, category: cat.id }))}
-                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all
+                          className={`flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-xl border text-xs font-medium transition-all active:scale-95
                             ${formData.category === cat.id
                               ? 'bg-[#d7827e] text-[#faf4ed] border-[#d7827e] shadow-sm'
                               : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#d7827e]/30 hover:text-[#575279]'
@@ -459,14 +465,14 @@ export default function App() {
                       placeholder="e.g. By the front gate on Park Street"
                       value={formData.locationDetails}
                       onChange={e => { setFormData(d => ({ ...d, locationDetails: e.target.value })); setFormErrors(e2 => ({ ...e2, locationDetails: false })); }}
-                      className={`w-full bg-white border ${formErrors.locationDetails ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
+                      className={`w-full bg-white border ${formErrors.locationDetails ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
                     />
                     {formErrors.locationDetails && <p className="text-[11px] text-[#d7827e] mt-1">Please add a location hint</p>}
                   </div>
                 </div>
 
-                {/* Submit */}
-                <div className="sticky bottom-0 bg-[#fffaf3] px-6 py-5 border-t border-[#ebe4df]/50 rounded-b-3xl">
+                {/* Submit — sticky at bottom with safe area padding for mobile */}
+                <div className="bg-[#fffaf3] px-5 md:px-6 py-4 md:py-5 border-t border-[#ebe4df]/50 rounded-b-3xl flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
                   <button
                     onClick={submitItem}
                     className="w-full bg-[#d7827e] text-[#faf4ed] py-3.5 rounded-xl font-serif font-semibold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
@@ -476,7 +482,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={cancelAdd}
-                    className="w-full text-[#9893a5] py-2 mt-2 text-xs hover:text-[#575279] transition-colors"
+                    className="w-full text-[#9893a5] py-2 mt-1 text-xs hover:text-[#575279] active:text-[#575279] transition-colors"
                   >
                     Cancel
                   </button>
@@ -506,7 +512,7 @@ export default function App() {
       </div>
 
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#faf4ed]/95 backdrop-blur-md h-20 border-t border-[#ebe4df] flex justify-around items-center px-6 z-50">
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 bg-[#faf4ed]/95 backdrop-blur-md h-20 border-t border-[#ebe4df] flex justify-around items-center px-6 z-50 transition-transform duration-300 ${placingPin || showForm ? 'translate-y-full' : 'translate-y-0'}`}>
         <a href="#" className="flex flex-col items-center gap-1.5 text-[#d7827e]">
           <span className="material-symbols-outlined">map</span>
           <span className="text-[9px] font-semibold tracking-wider uppercase">Map</span>
