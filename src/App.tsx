@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 
 type Category = 'furniture' | 'clothing' | 'entertainment' | 'pets' | 'kids';
@@ -110,7 +111,6 @@ export default function App() {
 
   useEffect(() => {
     const links = [
-      'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
       'https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap',
       'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
     ];
