@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -76,29 +76,48 @@ const mockItems: GiveawayItem[] = [
 ];
 
 
+const CATEGORY_STYLES: Record<Category, { icon: string; bg: string }> = {
+  furniture: { icon: 'chair', bg: '#d7827e' },
+  clothing: { icon: 'apparel', bg: '#907aa9' },
+  entertainment: { icon: 'movie', bg: '#ea9d34' },
+  pets: { icon: 'pets', bg: '#575279' },
+  kids: { icon: 'child_care', bg: '#d7827e' },
+};
+
+
 const getIconForCategory = (category: Category) => {
-  const styles = {
-    furniture: { icon: 'chair', bg: 'bg-[#d7827e]' },
-    clothing: { icon: 'apparel', bg: 'bg-[#907aa9]' },
-    entertainment: { icon: 'movie', bg: 'bg-[#ea9d34]' },
-    pets: { icon: 'pets', bg: 'bg-[#575279]' },
-    kids: { icon: 'child_care', bg: 'bg-[#d7827e]' },
-  };
-
-  const style = styles[category] || styles.furniture;
-
+  const s = CATEGORY_STYLES[category] || CATEGORY_STYLES.furniture;
   return L.divIcon({
     className: 'bg-transparent border-none',
     html: `
       <div class="relative group cursor-pointer -mt-5 -ml-5">
-        <div class="w-10 h-10 ${style.bg} text-[#faf4ed] rounded-full flex items-center justify-center shadow-lg border-2 border-white transform hover:scale-110 transition-transform">
-            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">${style.icon}</span>
+        <div class="w-10 h-10 text-[#faf4ed] rounded-full flex items-center justify-center shadow-lg border-2 border-white transform hover:scale-110 transition-transform" style="background:${s.bg};">
+            <span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">${s.icon}</span>
         </div>
       </div>
     `,
     iconSize: [40, 40],
     iconAnchor: [20, 20],
     popupAnchor: [0, -20]
+  });
+};
+
+
+const getMovingIconForCategory = (category: Category) => {
+  const s = CATEGORY_STYLES[category] || CATEGORY_STYLES.furniture;
+  return L.divIcon({
+    className: 'bg-transparent border-none',
+    html: `
+      <div style="position:relative;width:48px;height:48px;margin-top:-24px;margin-left:-24px;cursor:grab;">
+        <div class="marker-ping" style="position:absolute;inset:0;background:${s.bg};border-radius:50%;opacity:0.35;"></div>
+        <div style="position:relative;width:48px;height:48px;background:${s.bg};color:#faf4ed;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.3);border:3px solid white;transform:scale(1.1);">
+          <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1;">${s.icon}</span>
+        </div>
+      </div>
+    `,
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+    popupAnchor: [0, -24]
   });
 };
 
@@ -118,11 +137,18 @@ const dropPinIcon = L.divIcon({
 });
 
 
-function MapClickHandler({ active, onMapClick }: { active: boolean; onMapClick: (lat: number, lng: number) => void }) {
+function MapClickHandler({ active, onMapClick, movingItemId, onCancelMove }: {
+  active: boolean;
+  onMapClick: (lat: number, lng: number) => void;
+  movingItemId: string | null;
+  onCancelMove: () => void;
+}) {
   useMapEvents({
     click(e) {
       if (active) {
         onMapClick(e.latlng.lat, e.latlng.lng);
+      } else if (movingItemId) {
+        onCancelMove();
       }
     },
   });
@@ -154,6 +180,148 @@ function DraggableMarker({ position, onDragEnd }: { position: [number, number]; 
 }
 
 
+function MapRefCapture({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
+  const map = useMap();
+  useEffect(() => { mapRef.current = map; }, [map, mapRef]);
+  return null;
+}
+
+
+function LongPressMarker({
+  item, isMoving, mapRef, onMoveStart, onMoveEnd,
+}: {
+  item: GiveawayItem;
+  isMoving: boolean;
+  mapRef: React.MutableRefObject<L.Map | null>;
+  onMoveStart: (id: string) => void;
+  onMoveEnd: (id: string, lat: number, lng: number) => void;
+}) {
+  const markerRef = useRef<L.Marker>(null);
+  const dragging = useRef(false);
+
+  useEffect(() => {
+    const el = markerRef.current?.getElement();
+    if (!el) return;
+
+    let startX = 0, startY = 0;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const THRESHOLD_SQ = 100;
+
+    const cancelTimer = () => {
+      if (timer !== null) { clearTimeout(timer); timer = null; }
+    };
+
+    const startDrag = () => {
+      timer = null;
+      if (dragging.current) return;
+      dragging.current = true;
+      onMoveStart(item.id);
+      mapRef.current?.dragging.disable();
+
+      const getLL = (clientX: number, clientY: number) => {
+        const map = mapRef.current;
+        if (!map) return null;
+        const r = map.getContainer().getBoundingClientRect();
+        return map.containerPointToLatLng([clientX - r.left, clientY - r.top]);
+      };
+
+      const endDrag = () => {
+        dragging.current = false;
+        mapRef.current?.dragging.enable();
+        const ll = markerRef.current?.getLatLng();
+        if (ll) onMoveEnd(item.id, ll.lat, ll.lng);
+        document.removeEventListener('touchmove', onDocTouch as EventListener, true);
+        document.removeEventListener('touchend', endDrag);
+        document.removeEventListener('mousemove', onDocMouse);
+        document.removeEventListener('mouseup', endDrag);
+      };
+
+      const onDocTouch = (e: TouchEvent) => {
+        e.preventDefault();
+        const ll = getLL(e.touches[0].clientX, e.touches[0].clientY);
+        if (ll) markerRef.current?.setLatLng(ll);
+      };
+      const onDocMouse = (e: MouseEvent) => {
+        const ll = getLL(e.clientX, e.clientY);
+        if (ll) markerRef.current?.setLatLng(ll);
+      };
+
+      document.addEventListener('touchmove', onDocTouch as EventListener, { passive: false, capture: true });
+      document.addEventListener('touchend', endDrag);
+      document.addEventListener('mousemove', onDocMouse);
+      document.addEventListener('mouseup', endDrag);
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      timer = setTimeout(startDrag, 600);
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (dragging.current) return;
+      const dx = e.touches[0].clientX - startX, dy = e.touches[0].clientY - startY;
+      if (dx * dx + dy * dy > THRESHOLD_SQ) cancelTimer();
+    };
+    const onTouchEnd = () => cancelTimer();
+    const onContextMenu = (e: Event) => e.preventDefault();
+
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      startX = e.clientX; startY = e.clientY;
+      timer = setTimeout(startDrag, 600);
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (dragging.current) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (dx * dx + dy * dy > THRESHOLD_SQ) cancelTimer();
+    };
+    const onMouseUp = () => cancelTimer();
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('contextmenu', onContextMenu);
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('mousemove', onMouseMove);
+    el.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      cancelTimer();
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('contextmenu', onContextMenu);
+      el.removeEventListener('mousedown', onMouseDown);
+      el.removeEventListener('mousemove', onMouseMove);
+      el.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [item.id, isMoving]); // re-run when icon changes so we reattach to new element
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[item.lat, item.lng]}
+      icon={isMoving ? getMovingIconForCategory(item.category) : getIconForCategory(item.category)}
+    >
+      {!isMoving && (
+        <Popup className="custom-popup">
+          <div className="p-1 min-w-[200px]">
+            <span className="text-[9px] font-bold text-[#d7827e] uppercase tracking-widest block mb-1">
+              {item.category}
+            </span>
+            <h4 className="text-base font-serif font-semibold mb-1 leading-tight">{item.title}</h4>
+            <p className="text-xs text-[#575279]/80 mb-3">{item.description}</p>
+            <div className="flex justify-between items-center text-[10px] text-[#9893a5] border-t border-[#ebe4df] pt-2">
+              <span className="italic">{item.locationDetails}</span>
+              <span>{item.timePosted}</span>
+            </div>
+          </div>
+        </Popup>
+      )}
+    </Marker>
+  );
+}
+
+
 const categoryOptions: { id: Category; icon: string; label: string }[] = [
   { id: 'furniture', icon: 'chair', label: 'Furniture' },
   { id: 'clothing', icon: 'apparel', label: 'Clothing' },
@@ -172,7 +340,15 @@ export default function App() {
   const [newPinLocation, setNewPinLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [formData, setFormData] = useState({ title: '', description: '', category: 'furniture' as Category, locationDetails: '' });
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+  const [movingItemId, setMovingItemId] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+
+  const handleMoveStart = useCallback((id: string) => setMovingItemId(id), []);
+  const handleMoveEnd = useCallback((id: string, lat: number, lng: number) => {
+    setItems(prev => prev.map(i => i.id === id ? { ...i, lat, lng } : i));
+    setMovingItemId(null);
+  }, []);
 
 
   const startAddFlow = () => {
@@ -252,6 +428,12 @@ export default function App() {
   }, []);
 
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setMovingItemId(null); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   const filteredItems = activeCategory === 'all'
     ? items
     : items.filter(item => item.category === activeCategory);
@@ -270,8 +452,10 @@ export default function App() {
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes markerPing { 0% { transform: scale(1); opacity: 0.35; } 75%, 100% { transform: scale(2.2); opacity: 0; } }
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
         .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        .marker-ping { animation: markerPing 1.4s cubic-bezier(0,0,0.2,1) infinite; }
       `}</style>
 
 
@@ -364,28 +548,18 @@ export default function App() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             />
 
-            <MapClickHandler active={placingPin} onMapClick={handleMapClick} />
+            <MapRefCapture mapRef={mapRef} />
+            <MapClickHandler active={placingPin} onMapClick={handleMapClick} movingItemId={movingItemId} onCancelMove={() => setMovingItemId(null)} />
 
             {filteredItems.map(item => (
-              <Marker
+              <LongPressMarker
                 key={item.id}
-                position={[item.lat, item.lng]}
-                icon={getIconForCategory(item.category)}
-              >
-                <Popup className="custom-popup">
-                  <div className="p-1 min-w-[200px]">
-                    <span className="text-[9px] font-bold text-[#d7827e] uppercase tracking-widest block mb-1">
-                      {item.category}
-                    </span>
-                    <h4 className="text-base font-serif font-semibold mb-1 leading-tight">{item.title}</h4>
-                    <p className="text-xs text-[#575279]/80 mb-3">{item.description}</p>
-                    <div className="flex justify-between items-center text-[10px] text-[#9893a5] border-t border-[#ebe4df] pt-2">
-                      <span className="italic">{item.locationDetails}</span>
-                      <span>{item.timePosted}</span>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
+                item={item}
+                isMoving={movingItemId === item.id}
+                mapRef={mapRef}
+                onMoveStart={handleMoveStart}
+                onMoveEnd={handleMoveEnd}
+              />
             ))}
 
             {newPinLocation && (
@@ -402,6 +576,8 @@ export default function App() {
               <span className="material-symbols-outlined">my_location</span>
             </button>
           </div>
+
+
 
 
           {/* Desktop add card */}
@@ -426,13 +602,23 @@ export default function App() {
 
       {/* ===== Pin drop banner — sits above bottom bar on mobile ===== */}
       {placingPin && (
-        <div className="fixed bottom-24 md:bottom-auto md:top-28 left-1/2 -translate-x-1/2 z-[60] animate-slide-up">
-          <div className="bg-[#d7827e] text-[#faf4ed] px-5 py-3 rounded-2xl shadow-lg flex items-center gap-3 whitespace-nowrap">
-            <span className="material-symbols-outlined text-xl">add_location</span>
+        <div className="fixed bottom-24 md:bottom-auto md:top-28 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[60] animate-slide-up flex justify-center">
+          <div className="bg-[#d7827e] text-[#faf4ed] px-5 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+            <span className="material-symbols-outlined text-xl flex-shrink-0">add_location</span>
             <span className="font-serif font-medium text-sm">Tap the map to drop your pin</span>
-            <button onClick={cancelAdd} className="ml-1 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors">
+            <button onClick={cancelAdd} className="ml-1 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 active:bg-white/40 transition-colors flex-shrink-0">
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Marker drag banner ===== */}
+      {movingItemId && !placingPin && (
+        <div className="fixed bottom-24 md:bottom-auto md:top-28 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[60] animate-slide-up flex justify-center pointer-events-none">
+          <div className="bg-[#575279] text-[#faf4ed] px-5 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+            <span className="material-symbols-outlined text-xl flex-shrink-0">open_with</span>
+            <span className="font-serif font-medium text-sm">Hold &amp; drag to reposition</span>
           </div>
         </div>
       )}
