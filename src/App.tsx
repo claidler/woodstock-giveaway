@@ -133,7 +133,7 @@ export default function App() {
 
 
   return (
-    <div className="bg-[#faf4ed] text-[#575279] overflow-hidden font-sans min-h-screen flex flex-col">
+    <div className="bg-[#faf4ed] text-[#575279] overflow-hidden font-sans h-screen flex flex-col">
       <style>{`
         h1, h2, h3, h4, .font-serif { font-family: 'Noto Serif', serif; }
         .font-sans { font-family: 'Inter', sans-serif; }
@@ -166,7 +166,7 @@ export default function App() {
       </nav>
 
 
-      <div className="flex flex-1 pt-20 h-screen relative">
+      <div className="flex flex-1 pt-20 relative overflow-hidden">
         
         <aside className="hidden md:flex flex-col w-80 bg-[#f4ede8] p-8 gap-8 z-40 border-r border-[#ebe4df] overflow-y-auto">
           <div>
@@ -221,12 +221,12 @@ export default function App() {
         </aside>
 
 
-        <main className="flex-1 relative bg-[#faf4ed] h-full w-full z-0">
-          
-          <MapContainer 
-            center={WOODSTOCK_CENTER} 
-            zoom={15} 
-            className="w-full h-full z-0"
+        <main className="flex-1 relative bg-[#faf4ed] w-full z-0" style={{ minHeight: 0 }}>
+
+          <MapContainer
+            center={WOODSTOCK_CENTER}
+            zoom={15}
+            style={{ height: '100%', width: '100%' }}
             zoomControl={false}
           >
             <TileLayer
