@@ -170,16 +170,18 @@ function MapRefCapture({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null
 
 
 function LongPressMarker({
-  item, isMoving, mapRef, onMoveStart, onMoveEnd,
+  item, isMoving, mapRef, onMoveStart, onMoveEnd, onDelete,
 }: {
   item: GiveawayItem;
   isMoving: boolean;
   mapRef: React.MutableRefObject<L.Map | null>;
   onMoveStart: (id: string) => void;
   onMoveEnd: (id: string, lat: number, lng: number) => void;
+  onDelete: (id: string) => void;
 }) {
   const markerRef = useRef<L.Marker>(null);
   const dragging = useRef(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
     const el = markerRef.current?.getElement();
@@ -285,7 +287,7 @@ function LongPressMarker({
       icon={isMoving ? getMovingIconForCategory(item.category) : getIconForCategory(item.category)}
     >
       {!isMoving && (
-        <Popup className="custom-popup">
+        <Popup className="custom-popup" eventHandlers={{ remove: () => setConfirmingDelete(false) }}>
           <div className="p-1 min-w-[200px]">
             <span className="text-[9px] font-bold text-[#d7827e] uppercase tracking-widest block mb-1">
               {item.category}
@@ -295,6 +297,33 @@ function LongPressMarker({
             <div className="flex justify-between items-center text-[10px] text-[#9893a5] border-t border-[#ebe4df] pt-2">
               <span className="italic">{item.locationDetails}</span>
               <span>{item.timePosted}</span>
+            </div>
+            <div className="border-t border-[#ebe4df] mt-2 pt-2">
+              {!confirmingDelete ? (
+                <button
+                  onClick={() => setConfirmingDelete(true)}
+                  className="flex items-center gap-1 text-[11px] text-[#9893a5] hover:text-[#d7827e] transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">delete</span>
+                  Remove listing
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-[#575279]">Delete this item?</span>
+                  <button
+                    onClick={() => { onDelete(item.id); setConfirmingDelete(false); }}
+                    className="text-[11px] font-semibold text-[#faf4ed] bg-[#d7827e] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    className="text-[11px] font-semibold text-[#575279] bg-[#f4ede8] px-2.5 py-1 rounded-lg hover:bg-[#ebe4df] active:scale-95 transition-all"
+                  >
+                    No
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </Popup>
@@ -332,6 +361,11 @@ export default function App() {
     setItems(prev => prev.map(i => i.id === id ? { ...i, lat, lng } : i));
     setMovingItemId(null);
     supabase.from('giveaway_items').update({ lat, lng }).eq('id', id);
+  }, []);
+
+  const handleDelete = useCallback(async (id: string) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+    await supabase.from('giveaway_items').delete().eq('id', id);
   }, []);
 
 
@@ -419,6 +453,10 @@ export default function App() {
           if (prev.some(i => i.id === newItem.id)) return prev;
           return [newItem, ...prev];
         });
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'giveaway_items' }, (payload) => {
+        const deletedId = (payload.old as { id: string }).id;
+        setItems(prev => prev.filter(i => i.id !== deletedId));
       })
       .subscribe();
 
@@ -574,6 +612,7 @@ export default function App() {
                 mapRef={mapRef}
                 onMoveStart={handleMoveStart}
                 onMoveEnd={handleMoveEnd}
+                onDelete={handleDelete}
               />
             ))}
 
