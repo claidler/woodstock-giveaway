@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { supabase } from './supabaseClient';
 
 
 type Category = 'furniture' | 'clothing' | 'entertainment' | 'pets' | 'kids';
@@ -22,58 +23,39 @@ interface GiveawayItem {
 const WOODSTOCK_CENTER: [number, number] = [51.847, -1.354];
 
 
-const mockItems: GiveawayItem[] = [
-  {
-    id: '1',
-    title: 'Oak Writing Desk',
-    description: 'Slightly worn but sturdy. Left it by the front gate.',
-    lat: 51.848,
-    lng: -1.352,
-    category: 'furniture',
-    timePosted: 'Available now',
-    locationDetails: 'Near Blenheim Palace gates'
-  },
-  {
-    id: '2',
-    title: 'Toddler Clothes (Age 3-4)',
-    description: 'Rafe outgrew these! Mostly winter coats and jumpers.',
-    lat: 51.8465,
-    lng: -1.356,
-    category: 'kids',
-    timePosted: '15m ago',
-    locationDetails: 'Old Woodstock'
-  },
-  {
-    id: '3',
-    title: 'Box of 80s Slasher DVDs',
-    description: 'Having a clear out. Includes some classics and Scream boxset.',
-    lat: 51.845,
-    lng: -1.353,
-    category: 'entertainment',
-    timePosted: '1h ago',
-    locationDetails: 'Market Street'
-  },
-  {
-    id: '4',
-    title: 'Unused Dog Toys',
-    description: 'Hobbes completely ignored these. Brand new.',
-    lat: 51.8475,
-    lng: -1.355,
-    category: 'pets',
-    timePosted: 'Just now',
-    locationDetails: 'Park Street'
-  },
-  {
-    id: '5',
-    title: 'Vintage Knits & Sweaters',
-    description: 'Assorted warm winter clothing.',
-    lat: 51.849,
-    lng: -1.351,
-    category: 'clothing',
-    timePosted: '2h ago',
-    locationDetails: 'Hensington Road'
-  }
-];
+interface GiveawayItemRow {
+  id: string;
+  title: string;
+  description: string;
+  lat: number;
+  lng: number;
+  category: Category;
+  location_details: string;
+  created_at: string;
+}
+
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+function rowToItem(row: GiveawayItemRow): GiveawayItem {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    lat: row.lat,
+    lng: row.lng,
+    category: row.category,
+    locationDetails: row.location_details,
+    timePosted: formatRelativeTime(row.created_at),
+  };
+}
 
 
 const CATEGORY_STYLES: Record<Category, { icon: string; bg: string }> = {
@@ -332,7 +314,8 @@ const categoryOptions: { id: Category; icon: string; label: string }[] = [
 
 
 export default function App() {
-  const [items, setItems] = useState<GiveawayItem[]>(mockItems);
+  const [items, setItems] = useState<GiveawayItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all');
   // Flow states: idle -> placingPin -> formOpen (with pin on map, draggable)
   const [placingPin, setPlacingPin] = useState(false);
@@ -348,6 +331,7 @@ export default function App() {
   const handleMoveEnd = useCallback((id: string, lat: number, lng: number) => {
     setItems(prev => prev.map(i => i.id === id ? { ...i, lat, lng } : i));
     setMovingItemId(null);
+    supabase.from('giveaway_items').update({ lat, lng }).eq('id', id);
   }, []);
 
 
@@ -383,7 +367,7 @@ export default function App() {
     setFormErrors({});
   };
 
-  const submitItem = () => {
+  const submitItem = async () => {
     const errors: Record<string, boolean> = {};
     if (!formData.title.trim()) errors.title = true;
     if (!formData.description.trim()) errors.description = true;
@@ -394,21 +378,52 @@ export default function App() {
     }
     if (!newPinLocation) return;
 
-    const newItem: GiveawayItem = {
-      id: Date.now().toString(),
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      lat: newPinLocation.lat,
-      lng: newPinLocation.lng,
-      category: formData.category,
-      timePosted: 'Just now',
-      locationDetails: formData.locationDetails.trim(),
-    };
-    setItems(prev => [newItem, ...prev]);
+    const { data, error } = await supabase
+      .from('giveaway_items')
+      .insert({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        lat: newPinLocation.lat,
+        lng: newPinLocation.lng,
+        category: formData.category,
+        location_details: formData.locationDetails.trim(),
+      })
+      .select()
+      .single();
+
+    if (!error && data) {
+      setItems(prev => [rowToItem(data as GiveawayItemRow), ...prev]);
+    }
     setShowForm(false);
     setNewPinLocation(null);
     setFormErrors({});
   };
+
+
+  useEffect(() => {
+    supabase
+      .from('giveaway_items')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setItems(data.map(row => rowToItem(row as GiveawayItemRow)));
+        setIsLoading(false);
+      });
+
+    const channel = supabase
+      .channel('giveaway_items_changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'giveaway_items' }, (payload) => {
+        setItems(prev => {
+          const newItem = rowToItem(payload.new as GiveawayItemRow);
+          // Avoid duplicates (our own insert is already added optimistically)
+          if (prev.some(i => i.id === newItem.id)) return prev;
+          return [newItem, ...prev];
+        });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
 
   useEffect(() => {
@@ -570,6 +585,15 @@ export default function App() {
             )}
           </MapContainer>
 
+
+          {isLoading && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#faf4ed]/60 backdrop-blur-sm">
+              <div className="bg-white/95 rounded-2xl shadow-sm border border-[#ebe4df] px-6 py-4 flex items-center gap-3">
+                <div className="w-4 h-4 rounded-full border-2 border-[#d7827e] border-t-transparent animate-spin" />
+                <span className="font-serif text-sm text-[#575279]">Loading items…</span>
+              </div>
+            </div>
+          )}
 
           <div className="absolute top-4 right-4 z-10">
             <button className="bg-white/90 backdrop-blur-md w-11 h-11 md:w-12 md:h-12 flex items-center justify-center rounded-xl shadow-sm text-[#575279]/60 hover:text-[#d7827e] transition-colors">
