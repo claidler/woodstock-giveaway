@@ -177,7 +177,7 @@ export default function App() {
         .font-sans { font-family: 'Inter', sans-serif; }
         .leaflet-popup-content-wrapper { background-color: #fffaf3; color: #575279; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .leaflet-popup-tip { background-color: #fffaf3; }
-        .leaflet-container { font-family: 'Inter', sans-serif; touch-action: pan-x pan-y; }
+        .leaflet-container { font-family: 'Inter', sans-serif; touch-action: none; }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
