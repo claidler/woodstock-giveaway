@@ -1,9 +1,18 @@
+import type { Session } from '@supabase/supabase-js';
+
 interface MobileBottomBarProps {
   onStartAddFlow: () => void;
   onRecentreMap: () => void;
+  session: Session | null;
+  onSignOut: () => void;
 }
 
-export default function MobileBottomBar({ onStartAddFlow, onRecentreMap }: MobileBottomBarProps) {
+export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session, onSignOut }: MobileBottomBarProps) {
+  const user = session?.user;
+  const avatarUrl = user?.user_metadata?.avatar_url;
+  const displayName = user?.user_metadata?.full_name || user?.email || '';
+  const initial = (displayName[0] || '?').toUpperCase();
+
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#faf4ed]/95 backdrop-blur-md h-20 border-t border-[#ebe4df] flex justify-around items-center px-6 z-50">
       <button onClick={onRecentreMap} className="flex flex-col items-center gap-1.5 text-[#d7827e]">
@@ -21,10 +30,23 @@ export default function MobileBottomBar({ onStartAddFlow, onRecentreMap }: Mobil
         <span className="material-symbols-outlined">bookmark</span>
         <span className="text-[9px] font-semibold tracking-wider uppercase">Saved</span>
       </a>
-      <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
-        <span className="material-symbols-outlined">person</span>
-        <span className="text-[9px] font-semibold tracking-wider uppercase">You</span>
-      </a>
+      {user ? (
+        <button onClick={onSignOut} className="flex flex-col items-center gap-1.5 text-[#575279]/70">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
+          ) : (
+            <div className="w-6 h-6 rounded-full bg-[#907aa9] flex items-center justify-center text-[#faf4ed] text-[10px] font-serif font-semibold">
+              {initial}
+            </div>
+          )}
+          <span className="text-[9px] font-semibold tracking-wider uppercase">Sign out</span>
+        </button>
+      ) : (
+        <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
+          <span className="material-symbols-outlined">person</span>
+          <span className="text-[9px] font-semibold tracking-wider uppercase">You</span>
+        </a>
+      )}
     </div>
   );
 }

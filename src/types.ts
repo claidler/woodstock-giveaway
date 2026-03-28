@@ -9,6 +9,7 @@ export interface GiveawayItem {
   category: Category;
   timePosted: string;
   locationDetails: string;
+  owner_id: string;
 }
 
 export interface GiveawayItemRow {
@@ -20,4 +21,5 @@ export interface GiveawayItemRow {
   category: Category;
   location_details: string;
   created_at: string;
+  owner_id: string;
 }

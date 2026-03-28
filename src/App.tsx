@@ -1,8 +1,9 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from './supabaseClient';
+import type { Session } from '@supabase/supabase-js';
 import type { Category, GiveawayItem, GiveawayItemRow } from './types';
 import { WOODSTOCK_CENTER } from './constants';
 import { rowToItem } from './utils';
@@ -16,6 +17,7 @@ import MapClickHandler from './components/MapClickHandler';
 import DraggableMarker from './components/DraggableMarker';
 import LongPressMarker from './components/LongPressMarker';
 import MapRefCapture from './components/MapRefCapture';
+import AuthModal from './components/AuthModal';
 
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
   const [movingItemId, setMovingItemId] = useState<string | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleMoveStart = useCallback((id: string) => setMovingItemId(id), []);
   const handleMoveEnd = useCallback((id: string, lat: number, lng: number) => {
@@ -89,6 +93,14 @@ export default function App() {
     setFormErrors({});
   };
 
+  const requireAuth = (action: () => void) => {
+    if (session) {
+      action();
+    } else {
+      setShowAuthModal(true);
+    }
+  };
+
   const submitItem = async () => {
     const errors: Record<string, boolean> = {};
     if (!formData.title.trim()) errors.title = true;
@@ -109,6 +121,7 @@ export default function App() {
         lng: newPinLocation.lng,
         category: formData.category,
         location_details: formData.locationDetails.trim(),
+        owner_id: session!.user.id,
       })
       .select()
       .single();
@@ -151,6 +164,19 @@ export default function App() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) setShowAuthModal(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
 
   useEffect(() => {
     const links = [
@@ -190,6 +216,10 @@ export default function App() {
         .leaflet-popup-content-wrapper { background-color: #fffaf3; color: #575279; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .leaflet-popup-tip { background-color: #fffaf3; }
         .leaflet-container { font-family: 'Inter', sans-serif; touch-action: pan-x pan-y; }
+        .leaflet-control-attribution { background: rgba(255,255,255,0.6) !important; color: #9893a5; font-size: 10px; padding: 2px 6px !important; border-radius: 4px; }
+        .leaflet-control-attribution a { color: #9893a5; }
+        .leaflet-bottom.leaflet-right { bottom: 1.5rem; }
+        @media (min-width: 768px) { .leaflet-bottom.leaflet-right { bottom: 0; } }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
@@ -200,7 +230,7 @@ export default function App() {
       `}</style>
 
 
-      <Navbar onStartAddFlow={startAddFlow} />
+      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} />
 
 
       <div className="flex flex-1 pt-16 md:pt-20 relative overflow-hidden">
@@ -216,7 +246,9 @@ export default function App() {
             zoom={15}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
+            attributionControl={false}
           >
+            <AttributionControl prefix={false} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -234,6 +266,7 @@ export default function App() {
                 onMoveStart={handleMoveStart}
                 onMoveEnd={handleMoveEnd}
                 onDelete={handleDelete}
+                userId={session?.user.id ?? null}
               />
             ))}
 
@@ -268,7 +301,7 @@ export default function App() {
           {!isAddFlow && (
             <div className="hidden md:flex absolute bottom-8 left-8 right-8 z-10 pointer-events-none justify-between items-end gap-10">
               <div className="w-full max-w-2xl flex gap-6 pointer-events-auto">
-                 <div onClick={startAddFlow} className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/50 flex gap-4 items-center group cursor-pointer hover:bg-white transition-all hover:-translate-y-1 flex-1">
+                 <div onClick={() => requireAuth(startAddFlow)} className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/50 flex gap-4 items-center group cursor-pointer hover:bg-white transition-all hover:-translate-y-1 flex-1">
                     <div className="w-16 h-16 rounded-lg bg-[#f4ede8] flex items-center justify-center text-[#d7827e] flex-shrink-0 group-hover:bg-[#d7827e] group-hover:text-[#faf4ed] transition-colors">
                       <span className="material-symbols-outlined text-3xl">add_box</span>
                     </div>
@@ -307,7 +340,8 @@ export default function App() {
 
 
       {/* ===== Mobile bottom tab bar — always visible ===== */}
-      <MobileBottomBar onStartAddFlow={startAddFlow} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} />
+      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} session={session} onSignOut={() => supabase.auth.signOut()} />
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
 }

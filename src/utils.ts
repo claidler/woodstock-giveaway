@@ -20,5 +20,6 @@ export function rowToItem(row: GiveawayItemRow): GiveawayItem {
     category: row.category,
     locationDetails: row.location_details,
     timePosted: formatRelativeTime(row.created_at),
+    owner_id: row.owner_id,
   };
 }
