@@ -1,4 +1,4 @@
-import type { Category } from '../types';
+import type { Category, GiveawayItem } from '../types';
 import { categoryOptions } from '../constants';
 
 interface GiveawayFormProps {
@@ -10,12 +10,13 @@ interface GiveawayFormProps {
   onRepositionPin: () => void;
   onCancel: () => void;
   onSubmit: () => void;
+  editItem?: GiveawayItem | null;
 }
 
 export default function GiveawayForm({
   formData, formErrors, titleInputRef,
   onFormDataChange, onFormErrorChange,
-  onRepositionPin, onCancel, onSubmit,
+  onRepositionPin, onCancel, onSubmit, editItem,
 }: GiveawayFormProps) {
   return (
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center animate-fade-in">
@@ -31,8 +32,12 @@ export default function GiveawayForm({
         <div className="px-5 md:px-6 pt-2 md:pt-6 pb-3 md:pb-4 border-b border-[#ebe4df]/50 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-serif font-semibold text-[#575279]">List your giveaway</h3>
-              <p className="text-xs text-[#9893a5] mt-0.5">Fill in the details below.</p>
+              <h3 className="text-lg font-serif font-semibold text-[#575279]">
+                {editItem ? 'Edit listing' : 'List your giveaway'}
+              </h3>
+              <p className="text-xs text-[#9893a5] mt-0.5">
+                {editItem ? 'Update the details below.' : 'Fill in the details below.'}
+              </p>
             </div>
             <button onClick={onCancel} className="w-8 h-8 rounded-full bg-[#f4ede8] flex items-center justify-center text-[#9893a5] hover:text-[#575279] hover:bg-[#ebe4df] active:scale-95 transition-all">
               <span className="material-symbols-outlined text-sm">close</span>
@@ -120,7 +125,7 @@ export default function GiveawayForm({
             className="w-full bg-[#d7827e] text-[#faf4ed] py-3.5 rounded-xl font-serif font-semibold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-lg">check_circle</span>
-            List for neighbours
+            {editItem ? 'Save changes' : 'List for neighbours'}
           </button>
         </div>
       </div>
