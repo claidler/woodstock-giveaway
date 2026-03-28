@@ -5,9 +5,10 @@ interface MobileBottomBarProps {
   onRecentreMap: () => void;
   session: Session | null;
   onSignOut: () => void;
+  onShowAuth: () => void;
 }
 
-export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session, onSignOut }: MobileBottomBarProps) {
+export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session, onSignOut, onShowAuth }: MobileBottomBarProps) {
   const user = session?.user;
   const avatarUrl = user?.user_metadata?.avatar_url;
   const displayName = user?.user_metadata?.full_name || user?.email || '';
@@ -19,17 +20,9 @@ export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session
         <span className="material-symbols-outlined">map</span>
         <span className="text-[9px] font-semibold tracking-wider uppercase">Map</span>
       </button>
-      <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
-        <span className="material-symbols-outlined">format_list_bulleted</span>
-        <span className="text-[9px] font-semibold tracking-wider uppercase">List</span>
-      </a>
       <div onClick={onStartAddFlow} className="w-14 h-14 bg-[#d7827e] rounded-full -mt-12 flex items-center justify-center text-[#faf4ed] shadow-xl ring-4 ring-[#faf4ed] cursor-pointer active:scale-90 transition-transform">
         <span className="material-symbols-outlined text-2xl">add</span>
       </div>
-      <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
-        <span className="material-symbols-outlined">bookmark</span>
-        <span className="text-[9px] font-semibold tracking-wider uppercase">Saved</span>
-      </a>
       {user ? (
         <button onClick={onSignOut} className="flex flex-col items-center gap-1.5 text-[#575279]/70">
           {avatarUrl ? (
@@ -42,10 +35,10 @@ export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session
           <span className="text-[9px] font-semibold tracking-wider uppercase">Sign out</span>
         </button>
       ) : (
-        <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
+        <button onClick={onShowAuth} className="flex flex-col items-center gap-1.5 text-[#575279]/40">
           <span className="material-symbols-outlined">person</span>
           <span className="text-[9px] font-semibold tracking-wider uppercase">You</span>
-        </a>
+        </button>
       )}
     </div>
   );

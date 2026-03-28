@@ -340,7 +340,7 @@ export default function App() {
 
 
       {/* ===== Mobile bottom tab bar — always visible ===== */}
-      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} session={session} onSignOut={() => supabase.auth.signOut()} />
+      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
