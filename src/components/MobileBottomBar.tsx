@@ -1,14 +1,15 @@
 interface MobileBottomBarProps {
   onStartAddFlow: () => void;
+  onRecentreMap: () => void;
 }
 
-export default function MobileBottomBar({ onStartAddFlow }: MobileBottomBarProps) {
+export default function MobileBottomBar({ onStartAddFlow, onRecentreMap }: MobileBottomBarProps) {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#faf4ed]/95 backdrop-blur-md h-20 border-t border-[#ebe4df] flex justify-around items-center px-6 z-50">
-      <a href="#" className="flex flex-col items-center gap-1.5 text-[#d7827e]">
+      <button onClick={onRecentreMap} className="flex flex-col items-center gap-1.5 text-[#d7827e]">
         <span className="material-symbols-outlined">map</span>
         <span className="text-[9px] font-semibold tracking-wider uppercase">Map</span>
-      </a>
+      </button>
       <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
         <span className="material-symbols-outlined">format_list_bulleted</span>
         <span className="text-[9px] font-semibold tracking-wider uppercase">List</span>

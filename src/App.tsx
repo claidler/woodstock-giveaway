@@ -295,7 +295,7 @@ export default function App() {
 
 
       {/* ===== Mobile bottom tab bar — always visible ===== */}
-      <MobileBottomBar onStartAddFlow={startAddFlow} />
+      <MobileBottomBar onStartAddFlow={startAddFlow} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} />
     </div>
   );
 }
