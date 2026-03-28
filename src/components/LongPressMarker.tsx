@@ -11,10 +11,11 @@ interface LongPressMarkerProps {
   onMoveStart: (id: string) => void;
   onMoveEnd: (id: string, lat: number, lng: number) => void;
   onDelete: (id: string) => void;
+  userId: string | null;
 }
 
 export default function LongPressMarker({
-  item, isMoving, mapRef, onMoveStart, onMoveEnd, onDelete,
+  item, isMoving, mapRef, onMoveStart, onMoveEnd, onDelete, userId,
 }: LongPressMarkerProps) {
   const markerRef = useRef<L.Marker>(null);
   const dragging = useRef(false);
@@ -74,6 +75,7 @@ export default function LongPressMarker({
     };
 
     const onTouchStart = (e: TouchEvent) => {
+      if (item.owner_id !== userId) return;
       startX = e.touches[0].clientX; startY = e.touches[0].clientY;
       timer = setTimeout(startDrag, 600);
     };
@@ -87,6 +89,7 @@ export default function LongPressMarker({
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return;
+      if (item.owner_id !== userId) return;
       startX = e.clientX; startY = e.clientY;
       timer = setTimeout(startDrag, 600);
     };
@@ -115,7 +118,7 @@ export default function LongPressMarker({
       el.removeEventListener('mousemove', onMouseMove);
       el.removeEventListener('mouseup', onMouseUp);
     };
-  }, [item.id, isMoving]); // re-run when icon changes so we reattach to new element
+  }, [item.id, item.owner_id, userId, isMoving]); // re-run when icon changes so we reattach to new element
 
   return (
     <Marker
@@ -135,33 +138,35 @@ export default function LongPressMarker({
               <span className="italic">{item.locationDetails}</span>
               <span>{item.timePosted}</span>
             </div>
-            <div className="border-t border-[#ebe4df] mt-2 pt-2" onPointerDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
-              {!confirmingDelete ? (
-                <button
-                  onPointerUp={() => setConfirmingDelete(true)}
-                  className="flex items-center gap-1 text-[11px] text-[#9893a5] hover:text-[#d7827e] transition-colors py-1"
-                >
-                  <span className="material-symbols-outlined text-sm">delete</span>
-                  Remove listing
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-[#575279]">Delete this item?</span>
+            {userId && item.owner_id === userId && (
+              <div className="border-t border-[#ebe4df] mt-2 pt-2" onPointerDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
+                {!confirmingDelete ? (
                   <button
-                    onPointerUp={() => { onDelete(item.id); setConfirmingDelete(false); }}
-                    className="text-[11px] font-semibold text-[#faf4ed] bg-[#d7827e] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
+                    onPointerUp={() => setConfirmingDelete(true)}
+                    className="flex items-center gap-1 text-[11px] text-[#9893a5] hover:text-[#d7827e] transition-colors py-1"
                   >
-                    Yes
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                    Remove listing
                   </button>
-                  <button
-                    onPointerUp={() => setConfirmingDelete(false)}
-                    className="text-[11px] font-semibold text-[#575279] bg-[#f4ede8] px-2.5 py-1 rounded-lg hover:bg-[#ebe4df] active:scale-95 transition-all"
-                  >
-                    No
-                  </button>
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-[#575279]">Delete this item?</span>
+                    <button
+                      onPointerUp={() => { onDelete(item.id); setConfirmingDelete(false); }}
+                      className="text-[11px] font-semibold text-[#faf4ed] bg-[#d7827e] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onPointerUp={() => setConfirmingDelete(false)}
+                      className="text-[11px] font-semibold text-[#575279] bg-[#f4ede8] px-2.5 py-1 rounded-lg hover:bg-[#ebe4df] active:scale-95 transition-all"
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </Popup>
       )}
