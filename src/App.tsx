@@ -96,6 +96,7 @@ export default function App() {
   };
 
   const startEditFlow = (item: GiveawayItem) => {
+    setPlacingPin(false);
     setEditingItem(item);
     setNewPinLocation({ lat: item.lat, lng: item.lng });
     setFormData({
@@ -180,11 +181,11 @@ export default function App() {
           ? { ...i, ...updates, locationDetails: updates.location_details }
           : i
       ));
+      setShowForm(false);
+      setNewPinLocation(null);
+      setFormErrors({});
+      setEditingItem(null);
     }
-    setShowForm(false);
-    setNewPinLocation(null);
-    setFormErrors({});
-    setEditingItem(null);
   };
 
 

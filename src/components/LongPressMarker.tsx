@@ -144,7 +144,7 @@ export default function LongPressMarker({
                 {!confirmingDelete ? (
                   <div className="flex items-center justify-between">
                     <button
-                      onPointerUp={() => onEdit(item)}
+                      onPointerUp={() => { markerRef.current?.closePopup(); onEdit(item); }}
                       className="flex items-center gap-1 text-[11px] text-[#286983] hover:text-[#286983]/80 transition-colors py-1"
                     >
                       <span className="material-symbols-outlined text-sm">edit</span>
