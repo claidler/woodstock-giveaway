@@ -45,7 +45,19 @@ export default function App() {
 
   const handleDelete = useCallback(async (id: string) => {
     setItems(prev => prev.filter(i => i.id !== id));
-    await supabase.from('giveaway_items').delete().eq('id', id);
+    const { data, error } = await supabase
+      .from('giveaway_items')
+      .delete()
+      .eq('id', id)
+      .select();
+    if (error || !data || data.length === 0) {
+      // Delete failed (likely RLS policy missing) — re-fetch to restore correct state
+      const { data: freshData } = await supabase
+        .from('giveaway_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (freshData) setItems(freshData.map(row => rowToItem(row as GiveawayItemRow)));
+    }
   }, []);
 
 
@@ -328,7 +340,7 @@ export default function App() {
 
 
       {/* ===== Mobile bottom tab bar — always visible ===== */}
-      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} session={session} onSignOut={() => supabase.auth.signOut()} />
+      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
