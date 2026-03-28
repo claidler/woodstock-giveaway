@@ -212,6 +212,10 @@ export default function App() {
         const deletedId = (payload.old as { id: string }).id;
         setItems(prev => prev.filter(i => i.id !== deletedId));
       })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'giveaway_items' }, (payload) => {
+        const updated = rowToItem(payload.new as GiveawayItemRow);
+        setItems(prev => prev.map(i => i.id === updated.id ? updated : i));
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
