@@ -204,7 +204,6 @@ export default function App() {
             zoom={15}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
-            tap={false}
           >
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
