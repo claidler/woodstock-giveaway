@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from './supabaseClient';
@@ -204,6 +204,10 @@ export default function App() {
         .leaflet-popup-content-wrapper { background-color: #fffaf3; color: #575279; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .leaflet-popup-tip { background-color: #fffaf3; }
         .leaflet-container { font-family: 'Inter', sans-serif; touch-action: pan-x pan-y; }
+        .leaflet-control-attribution { background: rgba(255,255,255,0.6) !important; color: #9893a5; font-size: 10px; padding: 2px 6px !important; border-radius: 4px; }
+        .leaflet-control-attribution a { color: #9893a5; }
+        .leaflet-bottom.leaflet-right { bottom: 1.5rem; }
+        @media (min-width: 768px) { .leaflet-bottom.leaflet-right { bottom: 0; } }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
@@ -230,7 +234,9 @@ export default function App() {
             zoom={15}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
+            attributionControl={false}
           >
+            <AttributionControl prefix={false} />
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
