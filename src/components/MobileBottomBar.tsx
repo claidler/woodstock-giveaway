@@ -5,9 +5,10 @@ interface MobileBottomBarProps {
   onRecentreMap: () => void;
   session: Session | null;
   onSignOut: () => void;
+  onShowAuth: () => void;
 }
 
-export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session, onSignOut }: MobileBottomBarProps) {
+export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session, onSignOut, onShowAuth }: MobileBottomBarProps) {
   const user = session?.user;
   const avatarUrl = user?.user_metadata?.avatar_url;
   const displayName = user?.user_metadata?.full_name || user?.email || '';
@@ -34,10 +35,10 @@ export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session
           <span className="text-[9px] font-semibold tracking-wider uppercase">Sign out</span>
         </button>
       ) : (
-        <a href="#" className="flex flex-col items-center gap-1.5 text-[#575279]/40">
+        <button onClick={onShowAuth} className="flex flex-col items-center gap-1.5 text-[#575279]/40">
           <span className="material-symbols-outlined">person</span>
           <span className="text-[9px] font-semibold tracking-wider uppercase">You</span>
-        </a>
+        </button>
       )}
     </div>
   );
