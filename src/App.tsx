@@ -35,6 +35,7 @@ export default function App() {
   const mapRef = useRef<L.Map | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<GiveawayItem | null>(null);
 
   const handleMoveStart = useCallback((id: string) => setMovingItemId(id), []);
   const handleMoveEnd = useCallback((id: string, lat: number, lng: number) => {
@@ -91,6 +92,20 @@ export default function App() {
     setShowForm(false);
     setNewPinLocation(null);
     setFormErrors({});
+    setEditingItem(null);
+  };
+
+  const startEditFlow = (item: GiveawayItem) => {
+    setEditingItem(item);
+    setNewPinLocation({ lat: item.lat, lng: item.lng });
+    setFormData({
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      locationDetails: item.locationDetails,
+    });
+    setFormErrors({});
+    setShowForm(true);
   };
 
   const requireAuth = (action: () => void) => {
@@ -132,6 +147,44 @@ export default function App() {
     setShowForm(false);
     setNewPinLocation(null);
     setFormErrors({});
+  };
+
+  const updateItem = async () => {
+    const errors: Record<string, boolean> = {};
+    if (!formData.title.trim()) errors.title = true;
+    if (!formData.description.trim()) errors.description = true;
+    if (!formData.locationDetails.trim()) errors.locationDetails = true;
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    if (!newPinLocation || !editingItem) return;
+
+    const updates = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      category: formData.category,
+      location_details: formData.locationDetails.trim(),
+      lat: newPinLocation.lat,
+      lng: newPinLocation.lng,
+    };
+
+    const { error } = await supabase
+      .from('giveaway_items')
+      .update(updates)
+      .eq('id', editingItem.id);
+
+    if (!error) {
+      setItems(prev => prev.map(i =>
+        i.id === editingItem.id
+          ? { ...i, ...updates, locationDetails: updates.location_details }
+          : i
+      ));
+    }
+    setShowForm(false);
+    setNewPinLocation(null);
+    setFormErrors({});
+    setEditingItem(null);
   };
 
 
@@ -266,6 +319,7 @@ export default function App() {
                 onMoveStart={handleMoveStart}
                 onMoveEnd={handleMoveEnd}
                 onDelete={handleDelete}
+                onEdit={startEditFlow}
                 userId={session?.user.id ?? null}
               />
             ))}
@@ -334,7 +388,8 @@ export default function App() {
           onFormErrorChange={setFormErrors}
           onRepositionPin={repositionPin}
           onCancel={cancelAdd}
-          onSubmit={submitItem}
+          onSubmit={editingItem ? updateItem : submitItem}
+          editItem={editingItem}
         />
       )}
 
