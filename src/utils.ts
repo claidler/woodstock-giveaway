@@ -1,4 +1,4 @@
-import type { GiveawayItem, GiveawayItemRow } from './types';
+import type { Category, GiveawayItem, GiveawayItemRow } from './types';
 
 export function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -10,14 +10,17 @@ export function formatRelativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+export function parseCategories(raw: string): Category[] {
+  return raw.split(',').filter(Boolean) as Category[];
+}
+
 export function rowToItem(row: GiveawayItemRow): GiveawayItem {
   return {
     id: row.id,
-    title: row.title,
-    description: row.description,
+    description: row.title,
     lat: row.lat,
     lng: row.lng,
-    category: row.category,
+    categories: parseCategories(row.category),
     locationDetails: row.location_details,
     timePosted: formatRelativeTime(row.created_at),
     owner_id: row.owner_id,
