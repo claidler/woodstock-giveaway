@@ -18,7 +18,6 @@ import DraggableMarker from './components/DraggableMarker';
 import LongPressMarker from './components/LongPressMarker';
 import MapRefCapture from './components/MapRefCapture';
 import AuthModal from './components/AuthModal';
-import MobileFilterPopup from './components/MobileFilterPopup';
 
 
 export default function App() {
@@ -286,7 +285,7 @@ export default function App() {
       `}</style>
 
 
-      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
+      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
 
 
       <div className="flex flex-1 pt-16 md:pt-20 relative overflow-hidden">
@@ -348,8 +347,6 @@ export default function App() {
               </div>
             </div>
           )}
-
-          <MobileFilterPopup activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
 
           <div className="absolute top-4 right-4 z-10">
             <button className="bg-white/90 backdrop-blur-md w-11 h-11 md:w-12 md:h-12 flex items-center justify-center rounded-xl shadow-sm text-[#575279]/60 hover:text-[#d7827e] transition-colors">
