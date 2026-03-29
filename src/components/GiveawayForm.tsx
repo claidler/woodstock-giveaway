@@ -1,5 +1,5 @@
 import type { Category, GiveawayItem } from '../types';
-import { categoryOptions } from '../constants';
+import { categoryOptions, CATEGORY_STYLES } from '../constants';
 
 interface GiveawayFormProps {
   formData: { description: string; categories: Category[]; locationDetails: string };
@@ -64,15 +64,17 @@ export default function GiveawayForm({
             <div className="flex flex-wrap gap-2">
               {categoryOptions.map(cat => {
                 const selected = formData.categories.includes(cat.id);
+                const catColour = CATEGORY_STYLES[cat.id].bg;
                 return (
                   <button
                     key={cat.id}
                     onClick={() => toggleCategory(cat.id)}
                     className={`flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-xl border text-xs font-medium transition-all active:scale-95
                       ${selected
-                        ? 'bg-[#d7827e] text-[#faf4ed] border-[#d7827e] shadow-sm'
+                        ? 'text-[#faf4ed] shadow-sm'
                         : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#d7827e]/30 hover:text-[#575279]'
                       }`}
+                    style={selected ? { background: catColour, borderColor: catColour } : undefined}
                   >
                     <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>{cat.icon}</span>
                     {cat.label}
