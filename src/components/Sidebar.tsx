@@ -1,5 +1,5 @@
 import type { Category } from '../types';
-import { categoryOptions } from '../constants';
+import { categoryOptions, CATEGORY_STYLES } from '../constants';
 
 interface SidebarProps {
   activeCategory: Category | 'all';
@@ -19,21 +19,26 @@ export default function Sidebar({ activeCategory, onCategoryChange }: SidebarPro
       <div>
         <h3 className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest mb-4 px-1">Filter by Tag</h3>
         <div className="grid grid-cols-3 gap-2">
-          {allFilters.map((cat) => (
-            <div
-              key={cat.id}
-              onClick={() => onCategoryChange(cat.id as Category | 'all')}
-              className={`p-3 rounded-xl border transition-all cursor-pointer text-center group flex flex-col items-center justify-center gap-1.5
-                ${activeCategory === cat.id
-                  ? 'bg-white border-[#d7827e]/30 shadow-sm'
-                  : 'bg-white/40 border-transparent hover:bg-white hover:border-[#d7827e]/20'}`}
-            >
-              <span className={`material-symbols-outlined ${activeCategory === cat.id ? 'text-[#d7827e]' : 'text-[#9893a5]'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
-                {cat.icon}
-              </span>
-              <span className="text-[11px] font-medium opacity-80">{cat.label}</span>
-            </div>
-          ))}
+          {allFilters.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            const catColour = cat.id !== 'all' ? CATEGORY_STYLES[cat.id as Category].bg : '#d7827e';
+            return (
+              <div
+                key={cat.id}
+                onClick={() => onCategoryChange(cat.id as Category | 'all')}
+                className={`p-3 rounded-xl border transition-all cursor-pointer text-center group flex flex-col items-center justify-center gap-1.5
+                  ${isActive
+                    ? 'bg-white shadow-sm'
+                    : 'bg-white/40 border-transparent hover:bg-white hover:border-[#d7827e]/20'}`}
+                style={isActive ? { borderColor: `${catColour}40` } : undefined}
+              >
+                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1", color: isActive ? catColour : '#9893a5' }}>
+                  {cat.icon}
+                </span>
+                <span className="text-[11px] font-medium opacity-80">{cat.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
