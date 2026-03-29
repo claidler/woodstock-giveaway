@@ -285,7 +285,7 @@ export default function App() {
       `}</style>
 
 
-      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
+      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
 
 
       <div className="flex flex-1 pt-16 md:pt-20 relative overflow-hidden">
