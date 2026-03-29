@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { supabase } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import type { Category, GiveawayItem, GiveawayItemRow } from './types';
-import { WOODSTOCK_CENTER } from './constants';
+import { WOODSTOCK_CENTER, WOODSTOCK_BOUNDS } from './constants';
 import { rowToItem } from './utils';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -302,6 +302,10 @@ export default function App() {
           <MapContainer
             center={WOODSTOCK_CENTER}
             zoom={15}
+            minZoom={14}
+            maxZoom={18}
+            maxBounds={WOODSTOCK_BOUNDS}
+            maxBoundsViscosity={1.0}
             style={{ height: '100%', width: '100%' }}
             zoomControl={false}
             attributionControl={false}
