@@ -144,14 +144,14 @@ export default function LongPressMarker({
                 {!confirmingDelete ? (
                   <div className="flex items-center justify-between">
                     <button
-                      onPointerUp={() => { markerRef.current?.closePopup(); onEdit(item); }}
+                      onClick={() => { markerRef.current?.closePopup(); onEdit(item); }}
                       className="flex items-center gap-1 text-[11px] text-[#286983] hover:text-[#286983]/80 transition-colors py-1"
                     >
                       <span className="material-symbols-outlined text-sm">edit</span>
                       Edit details
                     </button>
                     <button
-                      onPointerUp={() => setConfirmingDelete(true)}
+                      onClick={() => setConfirmingDelete(true)}
                       className="flex items-center gap-1 text-[11px] text-[#9893a5] hover:text-[#d7827e] transition-colors py-1"
                     >
                       <span className="material-symbols-outlined text-sm">delete</span>
@@ -162,13 +162,13 @@ export default function LongPressMarker({
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] text-[#575279]">Delete this item?</span>
                     <button
-                      onPointerUp={() => { onDelete(item.id); setConfirmingDelete(false); }}
+                      onClick={() => { onDelete(item.id); setConfirmingDelete(false); }}
                       className="text-[11px] font-semibold text-[#faf4ed] bg-[#d7827e] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
                     >
                       Yes
                     </button>
                     <button
-                      onPointerUp={() => setConfirmingDelete(false)}
+                      onClick={() => setConfirmingDelete(false)}
                       className="text-[11px] font-semibold text-[#575279] bg-[#f4ede8] px-2.5 py-1 rounded-lg hover:bg-[#ebe4df] active:scale-95 transition-all"
                     >
                       No
