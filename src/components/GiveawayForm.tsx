@@ -1,11 +1,11 @@
 import type { Category, GiveawayItem } from '../types';
-import { categoryOptions } from '../constants';
+import { categoryOptions, CATEGORY_STYLES } from '../constants';
 
 interface GiveawayFormProps {
-  formData: { title: string; description: string; category: Category; locationDetails: string };
+  formData: { description: string; categories: Category[]; locationDetails: string };
   formErrors: Record<string, boolean>;
-  titleInputRef: React.RefObject<HTMLInputElement>;
-  onFormDataChange: (updater: (d: { title: string; description: string; category: Category; locationDetails: string }) => { title: string; description: string; category: Category; locationDetails: string }) => void;
+  descriptionInputRef: React.RefObject<HTMLTextAreaElement>;
+  onFormDataChange: (updater: (d: { description: string; categories: Category[]; locationDetails: string }) => { description: string; categories: Category[]; locationDetails: string }) => void;
   onFormErrorChange: (updater: (e: Record<string, boolean>) => Record<string, boolean>) => void;
   onRepositionPin: () => void;
   onCancel: () => void;
@@ -14,10 +14,21 @@ interface GiveawayFormProps {
 }
 
 export default function GiveawayForm({
-  formData, formErrors, titleInputRef,
+  formData, formErrors, descriptionInputRef,
   onFormDataChange, onFormErrorChange,
   onRepositionPin, onCancel, onSubmit, editItem,
 }: GiveawayFormProps) {
+  const toggleCategory = (catId: Category) => {
+    onFormDataChange(d => {
+      const has = d.categories.includes(catId);
+      const next = has
+        ? d.categories.filter(c => c !== catId)
+        : [...d.categories, catId];
+      return { ...d, categories: next };
+    });
+    onFormErrorChange(e => ({ ...e, categories: false }));
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center animate-fade-in">
       <div className="absolute inset-0 bg-[#575279]/20 backdrop-blur-sm" onClick={onCancel} />
@@ -47,26 +58,40 @@ export default function GiveawayForm({
 
         {/* Scrollable form body */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-5 md:px-6 py-4 md:py-5 space-y-4 md:space-y-5">
-          {/* Title */}
+          {/* Categories — multi-select */}
           <div>
-            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">What are you giving away?</label>
-            <input
-              ref={titleInputRef}
-              type="text"
-              placeholder="e.g. Oak Writing Desk"
-              value={formData.title}
-              onChange={e => { onFormDataChange(d => ({ ...d, title: e.target.value })); onFormErrorChange(e2 => ({ ...e2, title: false })); }}
-              className={`w-full bg-white border ${formErrors.title ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm font-serif focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
-            />
-            {formErrors.title && <p className="text-[11px] text-[#d7827e] mt-1">Please add a title</p>}
+            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">What are you giving away? <span className="normal-case tracking-normal font-normal">(select all that apply)</span></label>
+            <div className="flex flex-wrap gap-2">
+              {categoryOptions.map(cat => {
+                const selected = formData.categories.includes(cat.id);
+                const catColour = CATEGORY_STYLES[cat.id].bg;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-xl border text-xs font-medium transition-all active:scale-95
+                      ${selected
+                        ? 'text-[#faf4ed] shadow-sm'
+                        : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#d7827e]/30 hover:text-[#575279]'
+                      }`}
+                    style={selected ? { background: catColour, borderColor: catColour } : undefined}
+                  >
+                    <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>{cat.icon}</span>
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+            {formErrors.categories && <p className="text-[11px] text-[#d7827e] mt-1">Please select at least one category</p>}
           </div>
 
           {/* Description */}
           <div>
-            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">Description</label>
+            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">Briefly describe what you're giving away</label>
             <textarea
-              placeholder="Condition, quantity, any notes for neighbours..."
-              rows={2}
+              ref={descriptionInputRef}
+              placeholder="e.g. Mostly kids' toys, some garden furniture, and a few paperbacks"
+              rows={3}
               value={formData.description}
               onChange={e => { onFormDataChange(d => ({ ...d, description: e.target.value })); onFormErrorChange(e2 => ({ ...e2, description: false })); }}
               className={`w-full bg-white border ${formErrors.description ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50 resize-none`}
@@ -74,38 +99,16 @@ export default function GiveawayForm({
             {formErrors.description && <p className="text-[11px] text-[#d7827e] mt-1">Please add a description</p>}
           </div>
 
-          {/* Category */}
+          {/* Location hint — optional */}
           <div>
-            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">Category</label>
-            <div className="flex flex-wrap gap-2">
-              {categoryOptions.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => onFormDataChange(d => ({ ...d, category: cat.id }))}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-xl border text-xs font-medium transition-all active:scale-95
-                    ${formData.category === cat.id
-                      ? 'bg-[#d7827e] text-[#faf4ed] border-[#d7827e] shadow-sm'
-                      : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#d7827e]/30 hover:text-[#575279]'
-                    }`}
-                >
-                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>{cat.icon}</span>
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Location details */}
-          <div>
-            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">Location hint</label>
+            <label className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest block mb-1.5">Location hint <span className="normal-case tracking-normal font-normal">(optional)</span></label>
             <input
               type="text"
               placeholder="e.g. By the front gate on Park Street"
               value={formData.locationDetails}
-              onChange={e => { onFormDataChange(d => ({ ...d, locationDetails: e.target.value })); onFormErrorChange(e2 => ({ ...e2, locationDetails: false })); }}
-              className={`w-full bg-white border ${formErrors.locationDetails ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50`}
+              onChange={e => onFormDataChange(d => ({ ...d, locationDetails: e.target.value }))}
+              className="w-full bg-white border border-[#ebe4df] rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50"
             />
-            {formErrors.locationDetails && <p className="text-[11px] text-[#d7827e] mt-1">Please add a location hint</p>}
           </div>
 
           {/* Reposition pin */}

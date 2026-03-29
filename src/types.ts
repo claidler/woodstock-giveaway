@@ -1,14 +1,13 @@
-export type Category = 'furniture' | 'clothing' | 'entertainment' | 'pets' | 'kids';
+export type Category = 'furniture' | 'clothing' | 'entertainment' | 'pets' | 'kids' | 'garden' | 'books' | 'kitchen';
 
 export interface GiveawayItem {
   id: string;
-  title: string;
   description: string;
   lat: number;
   lng: number;
-  category: Category;
-  timePosted: string;
+  categories: Category[];
   locationDetails: string;
+  timePosted: string;
   owner_id: string;
 }
 
@@ -18,7 +17,7 @@ export interface GiveawayItemRow {
   description: string;
   lat: number;
   lng: number;
-  category: Category;
+  category: string;
   location_details: string;
   created_at: string;
   owner_id: string;
