@@ -28,10 +28,10 @@ export default function App() {
   const [placingPin, setPlacingPin] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [newPinLocation, setNewPinLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [formData, setFormData] = useState({ title: '', description: '', category: 'furniture' as Category, locationDetails: '' });
+  const [formData, setFormData] = useState({ description: '', categories: [] as Category[], locationDetails: '' });
   const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
   const [movingItemId, setMovingItemId] = useState<string | null>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -66,7 +66,7 @@ export default function App() {
     setPlacingPin(true);
     setNewPinLocation(null);
     setShowForm(false);
-    setFormData({ title: '', description: '', category: 'furniture', locationDetails: '' });
+    setFormData({ description: '', categories: [], locationDetails: '' });
     setFormErrors({});
   };
 
@@ -74,7 +74,7 @@ export default function App() {
     setNewPinLocation({ lat, lng });
     setPlacingPin(false);
     setShowForm(true);
-    setTimeout(() => titleInputRef.current?.focus(), 300);
+    setTimeout(() => descriptionInputRef.current?.focus(), 300);
   };
 
   const handlePinDrag = (lat: number, lng: number) => {
@@ -100,9 +100,8 @@ export default function App() {
     setEditingItem(item);
     setNewPinLocation({ lat: item.lat, lng: item.lng });
     setFormData({
-      title: item.title,
       description: item.description,
-      category: item.category,
+      categories: [...item.categories],
       locationDetails: item.locationDetails,
     });
     setFormErrors({});
@@ -119,9 +118,8 @@ export default function App() {
 
   const submitItem = async () => {
     const errors: Record<string, boolean> = {};
-    if (!formData.title.trim()) errors.title = true;
+    if (formData.categories.length === 0) errors.categories = true;
     if (!formData.description.trim()) errors.description = true;
-    if (!formData.locationDetails.trim()) errors.locationDetails = true;
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
@@ -131,11 +129,11 @@ export default function App() {
     const { data, error } = await supabase
       .from('giveaway_items')
       .insert({
-        title: formData.title.trim(),
-        description: formData.description.trim(),
+        title: formData.description.trim(),
+        description: '',
         lat: newPinLocation.lat,
         lng: newPinLocation.lng,
-        category: formData.category,
+        category: formData.categories.join(','),
         location_details: formData.locationDetails.trim(),
         owner_id: session!.user.id,
       })
@@ -152,9 +150,8 @@ export default function App() {
 
   const updateItem = async () => {
     const errors: Record<string, boolean> = {};
-    if (!formData.title.trim()) errors.title = true;
+    if (formData.categories.length === 0) errors.categories = true;
     if (!formData.description.trim()) errors.description = true;
-    if (!formData.locationDetails.trim()) errors.locationDetails = true;
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
@@ -162,9 +159,9 @@ export default function App() {
     if (!newPinLocation || !editingItem) return;
 
     const updates = {
-      title: formData.title.trim(),
-      description: formData.description.trim(),
-      category: formData.category,
+      title: formData.description.trim(),
+      description: '',
+      category: formData.categories.join(','),
       location_details: formData.locationDetails.trim(),
       lat: newPinLocation.lat,
       lng: newPinLocation.lng,
@@ -178,7 +175,7 @@ export default function App() {
     if (!error) {
       setItems(prev => prev.map(i =>
         i.id === editingItem.id
-          ? { ...i, ...updates, locationDetails: updates.location_details }
+          ? rowToItem({ ...updates, id: editingItem.id, created_at: '', owner_id: editingItem.owner_id } as GiveawayItemRow)
           : i
       ));
       setShowForm(false);
@@ -261,7 +258,7 @@ export default function App() {
 
   const filteredItems = activeCategory === 'all'
     ? items
-    : items.filter(item => item.category === activeCategory);
+    : items.filter(item => item.categories.includes(activeCategory));
 
   const isAddFlow = placingPin || showForm;
 
@@ -388,7 +385,7 @@ export default function App() {
         <GiveawayForm
           formData={formData}
           formErrors={formErrors}
-          titleInputRef={titleInputRef}
+          descriptionInputRef={descriptionInputRef}
           onFormDataChange={setFormData}
           onFormErrorChange={setFormErrors}
           onRepositionPin={repositionPin}
