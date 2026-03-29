@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { GiveawayItem } from '../types';
-import { getIconForCategory, getMovingIconForCategory } from '../icons';
+import { getIconForCategories, getMovingIconForCategories } from '../icons';
+import { CATEGORY_STYLES } from '../constants';
 
 interface LongPressMarkerProps {
   item: GiveawayItem;
@@ -119,26 +120,40 @@ export default function LongPressMarker({
       el.removeEventListener('mousemove', onMouseMove);
       el.removeEventListener('mouseup', onMouseUp);
     };
-  }, [item.id, item.owner_id, userId, isMoving]); // re-run when icon changes so we reattach to new element
+  }, [item.id, item.owner_id, userId, isMoving]);
 
   return (
     <Marker
       ref={markerRef}
       position={[item.lat, item.lng]}
-      icon={isMoving ? getMovingIconForCategory(item.category) : getIconForCategory(item.category)}
+      icon={isMoving ? getMovingIconForCategories(item.categories) : getIconForCategories(item.categories)}
     >
       {!isMoving && (
         <Popup className="custom-popup" eventHandlers={{ remove: () => setConfirmingDelete(false) }}>
           <div className="p-1 min-w-[200px]">
-            <span className="text-[9px] font-bold text-[#d7827e] uppercase tracking-widest block mb-1">
-              {item.category}
-            </span>
-            <h4 className="text-base font-serif font-semibold mb-1 leading-tight">{item.title}</h4>
-            <p className="text-xs text-[#575279]/80 mb-3">{item.description}</p>
-            <div className="flex justify-between items-center text-[10px] text-[#9893a5] border-t border-[#ebe4df] pt-2">
-              <span className="italic">{item.locationDetails}</span>
-              <span>{item.timePosted}</span>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {item.categories.map(cat => {
+                const s = CATEGORY_STYLES[cat];
+                return (
+                  <span key={cat} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white px-2 py-0.5 rounded-full" style={{ background: s?.bg || '#9893a5' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '12px', fontVariationSettings: "'FILL' 1" }}>{s?.icon || 'category'}</span>
+                    {cat}
+                  </span>
+                );
+              })}
             </div>
+            <p className="text-xs text-[#575279]/80 mb-3">{item.description}</p>
+            {item.locationDetails && (
+              <div className="flex justify-between items-center text-[10px] text-[#9893a5] border-t border-[#ebe4df] pt-2">
+                <span className="italic">{item.locationDetails}</span>
+                <span>{item.timePosted}</span>
+              </div>
+            )}
+            {!item.locationDetails && (
+              <div className="flex justify-end items-center text-[10px] text-[#9893a5] border-t border-[#ebe4df] pt-2">
+                <span>{item.timePosted}</span>
+              </div>
+            )}
             {userId && item.owner_id === userId && (
               <div className="border-t border-[#ebe4df] mt-2 pt-2" onPointerDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
                 {!confirmingDelete ? (
@@ -160,7 +175,7 @@ export default function LongPressMarker({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] text-[#575279]">Delete this item?</span>
+                    <span className="text-[11px] text-[#575279]">Delete this listing?</span>
                     <button
                       onClick={() => { onDelete(item.id); setConfirmingDelete(false); }}
                       className="text-[11px] font-semibold text-[#faf4ed] bg-[#d7827e] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
