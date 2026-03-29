@@ -288,7 +288,7 @@ export default function App() {
       `}</style>
 
 
-      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} />
+      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
 
 
       <div className="flex flex-1 pt-16 md:pt-20 relative overflow-hidden">

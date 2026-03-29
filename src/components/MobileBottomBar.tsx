@@ -37,7 +37,7 @@ export default function MobileBottomBar({ onStartAddFlow, onRecentreMap, session
       ) : (
         <button onClick={onShowAuth} className="flex flex-col items-center gap-1.5 text-[#575279]/40">
           <span className="material-symbols-outlined">person</span>
-          <span className="text-[9px] font-semibold tracking-wider uppercase">You</span>
+          <span className="text-[9px] font-semibold tracking-wider uppercase">Sign in</span>
         </button>
       )}
     </div>
