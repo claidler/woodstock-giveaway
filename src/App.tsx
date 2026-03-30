@@ -6,7 +6,7 @@ import { supabase } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import type { Category, GiveawayItem, GiveawayItemRow } from './types';
 import { WOODSTOCK_CENTER, WOODSTOCK_BOUNDS } from './constants';
-import { rowToItem } from './utils';
+import { rowToItem, parseCategories } from './utils';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import GiveawayForm from './components/GiveawayForm';
@@ -175,7 +175,14 @@ export default function App() {
     if (!error) {
       setItems(prev => prev.map(i =>
         i.id === editingItem.id
-          ? rowToItem({ ...updates, id: editingItem.id, created_at: '', owner_id: editingItem.owner_id } as GiveawayItemRow)
+          ? {
+              ...i,
+              description: updates.title,
+              lat: updates.lat,
+              lng: updates.lng,
+              categories: parseCategories(updates.category),
+              locationDetails: updates.location_details,
+            }
           : i
       ));
       setShowForm(false);
