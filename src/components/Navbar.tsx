@@ -1,25 +1,17 @@
-import { useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import type { Category } from '../types';
-import { categoryOptions, CATEGORY_STYLES } from '../constants';
 
 interface NavbarProps {
   onStartAddFlow: () => void;
   session: Session | null;
   onSignOut: () => void;
   onShowAuth: () => void;
-  activeCategory: Category | 'all';
-  onCategoryChange: (category: Category | 'all') => void;
 }
 
-export default function Navbar({ onStartAddFlow, session, onSignOut, onShowAuth, activeCategory, onCategoryChange }: NavbarProps) {
+export default function Navbar({ onStartAddFlow, session, onSignOut, onShowAuth }: NavbarProps) {
   const user = session?.user;
   const avatarUrl = user?.user_metadata?.avatar_url;
   const displayName = user?.user_metadata?.full_name || user?.email || '';
   const initial = (displayName[0] || '?').toUpperCase();
-  const [filterOpen, setFilterOpen] = useState(false);
-  const hasFilter = activeCategory !== 'all';
-  const allFilters = [{ id: 'all' as const, icon: 'map', label: 'All Items' }, ...categoryOptions];
 
   return (
     <nav className="fixed top-0 w-full z-50 bg-[#faf4ed]/80 backdrop-blur-xl flex justify-between items-center px-4 md:px-8 h-16 md:h-20 shadow-none border-b border-[#ebe4df]/50">
@@ -27,60 +19,6 @@ export default function Navbar({ onStartAddFlow, session, onSignOut, onShowAuth,
         <span className="text-lg md:text-2xl font-serif italic font-semibold text-[#d7827e] tracking-tight">The Great Woodstock Giveaway</span>
       </div>
       <div className="flex items-center gap-4 md:gap-6">
-        {/* Mobile filter button */}
-        <div className="md:hidden relative">
-          <button
-            onClick={() => setFilterOpen(o => !o)}
-            className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all relative ${
-              hasFilter
-                ? 'bg-[#d7827e] text-white border-[#d7827e] shadow-sm'
-                : 'bg-white/70 text-[#575279]/60 border-[#ebe4df] active:bg-white'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              tune
-            </span>
-            {hasFilter && (
-              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#ea9d34] border-2 border-[#faf4ed]" />
-            )}
-          </button>
-          {filterOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-              <div className="absolute right-0 top-full mt-2 z-50 bg-[#faf4ed]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#ebe4df] p-4 w-56 animate-fade-in">
-                <h3 className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest mb-3 px-0.5">Filter by Tag</h3>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {allFilters.map((cat) => {
-                    const isActive = activeCategory === cat.id;
-                    const catColour = cat.id !== 'all' ? CATEGORY_STYLES[cat.id as Category].bg : '#d7827e';
-                    return (
-                      <div
-                        key={cat.id}
-                        onClick={() => {
-                          onCategoryChange(cat.id as Category | 'all');
-                          setFilterOpen(false);
-                        }}
-                        className={`p-2 rounded-xl border transition-all cursor-pointer text-center flex flex-col items-center justify-center gap-0.5
-                          ${isActive
-                            ? 'bg-white shadow-sm'
-                            : 'bg-white/40 border-transparent active:bg-white'}`}
-                        style={isActive ? { borderColor: `${catColour}40` } : undefined}
-                      >
-                        <span
-                          className="material-symbols-outlined text-lg"
-                          style={{ fontVariationSettings: "'FILL' 1", color: isActive ? catColour : '#9893a5' }}
-                        >
-                          {cat.icon}
-                        </span>
-                        <span className="text-[9px] font-medium opacity-80 leading-tight">{cat.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
         <button onClick={onStartAddFlow} className="hidden md:block bg-[#d7827e] text-[#faf4ed] px-6 py-2 rounded-lg font-serif font-medium text-sm hover:opacity-90 active:scale-95 transition-all">
           List Your Giveaway
         </button>

@@ -285,7 +285,7 @@ export default function App() {
       `}</style>
 
 
-      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
+      <Navbar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
 
 
       <div className="flex flex-1 pt-16 md:pt-20 relative overflow-hidden">
@@ -298,7 +298,7 @@ export default function App() {
 
           <MapContainer
             center={WOODSTOCK_CENTER}
-            zoom={15}
+            zoom={16}
             minZoom={14}
             maxZoom={18}
             maxBounds={WOODSTOCK_BOUNDS}
@@ -401,7 +401,7 @@ export default function App() {
 
 
       {/* ===== Mobile bottom tab bar — always visible ===== */}
-      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} onRecentreMap={() => mapRef.current?.flyTo(WOODSTOCK_CENTER, 15, { duration: 0.5 })} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} />
+      <MobileBottomBar onStartAddFlow={() => requireAuth(startAddFlow)} session={session} onSignOut={() => supabase.auth.signOut()} onShowAuth={() => setShowAuthModal(true)} activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
     </div>
   );
