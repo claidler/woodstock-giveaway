@@ -167,7 +167,7 @@ export default function LongPressMarker({
                     </button>
                     <button
                       onClick={() => setConfirmingDelete(true)}
-                      className="flex items-center gap-1 text-[11px] text-[#9893a5] hover:text-[#d7827e] transition-colors py-1"
+                      className="flex items-center gap-1 text-[11px] text-[#9893a5] hover:text-[#bd5f5f] transition-colors py-1"
                     >
                       <span className="material-symbols-outlined text-sm">delete</span>
                       Remove listing
@@ -178,7 +178,7 @@ export default function LongPressMarker({
                     <span className="text-[11px] text-[#575279]">Delete this listing?</span>
                     <button
                       onClick={() => { onDelete(item.id); setConfirmingDelete(false); }}
-                      className="text-[11px] font-semibold text-[#faf4ed] bg-[#d7827e] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
+                      className="text-[11px] font-semibold text-[#f9f5ea] bg-[#bd5f5f] px-2.5 py-1 rounded-lg hover:opacity-90 active:scale-95 transition-all"
                     >
                       Yes
                     </button>

@@ -263,13 +263,13 @@ export default function App() {
   const isAddFlow = placingPin || showForm;
 
   return (
-    <div className="bg-[#faf4ed] text-[#575279] overflow-hidden font-sans h-screen flex flex-col touch-manipulation">
+    <div className="bg-[#f9f5ea] text-[#575279] overflow-hidden font-sans h-screen flex flex-col touch-manipulation">
       <style>{`
         html, body, #root { touch-action: manipulation; overscroll-behavior: none; }
         h1, h2, h3, h4, .font-serif { font-family: 'Noto Serif', serif; }
         .font-sans { font-family: 'Inter', sans-serif; }
-        .leaflet-popup-content-wrapper { background-color: #fffaf3; color: #575279; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        .leaflet-popup-tip { background-color: #fffaf3; }
+        .leaflet-popup-content-wrapper { background-color: #f9f5ea; color: #575279; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
+        .leaflet-popup-tip { background-color: #f9f5ea; }
         .leaflet-container { font-family: 'Inter', sans-serif; touch-action: pan-x pan-y; }
         .leaflet-control-attribution { background: rgba(255,255,255,0.6) !important; color: #9893a5; font-size: 10px; padding: 2px 6px !important; border-radius: 4px; }
         .leaflet-control-attribution a { color: #9893a5; }
@@ -294,7 +294,7 @@ export default function App() {
 
 
         {/* Map area — pb-20 on mobile to make room for bottom bar */}
-        <main className="flex-1 relative bg-[#faf4ed] w-full z-0 pb-20 md:pb-0" style={{ minHeight: 0 }}>
+        <main className="flex-1 relative bg-[#f9f5ea] w-full z-0 pb-20 md:pb-0" style={{ minHeight: 0 }}>
 
           <MapContainer
             center={WOODSTOCK_CENTER}
@@ -340,16 +340,16 @@ export default function App() {
 
 
           {isLoading && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#faf4ed]/60 backdrop-blur-sm">
+            <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#f9f5ea]/60 backdrop-blur-sm">
               <div className="bg-white/95 rounded-2xl shadow-sm border border-[#ebe4df] px-6 py-4 flex items-center gap-3">
-                <div className="w-4 h-4 rounded-full border-2 border-[#d7827e] border-t-transparent animate-spin" />
+                <div className="w-4 h-4 rounded-full border-2 border-[#bd5f5f] border-t-transparent animate-spin" />
                 <span className="font-serif text-sm text-[#575279]">Loading items…</span>
               </div>
             </div>
           )}
 
           <div className="absolute top-4 right-4 z-10">
-            <button className="bg-white/90 backdrop-blur-md w-11 h-11 md:w-12 md:h-12 flex items-center justify-center rounded-xl shadow-sm text-[#575279]/60 hover:text-[#d7827e] transition-colors">
+            <button className="bg-white/90 backdrop-blur-md w-11 h-11 md:w-12 md:h-12 flex items-center justify-center rounded-xl shadow-sm text-[#575279]/60 hover:text-[#bd5f5f] transition-colors">
               <span className="material-symbols-outlined">my_location</span>
             </button>
           </div>
@@ -362,7 +362,7 @@ export default function App() {
             <div className="hidden md:flex absolute bottom-8 left-8 right-8 z-10 pointer-events-none justify-between items-end gap-10">
               <div className="w-full max-w-2xl flex gap-6 pointer-events-auto">
                  <div onClick={() => requireAuth(startAddFlow)} className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/50 flex gap-4 items-center group cursor-pointer hover:bg-white transition-all hover:-translate-y-1 flex-1">
-                    <div className="w-16 h-16 rounded-lg bg-[#f4ede8] flex items-center justify-center text-[#d7827e] flex-shrink-0 group-hover:bg-[#d7827e] group-hover:text-[#faf4ed] transition-colors">
+                    <div className="w-16 h-16 rounded-lg bg-[#f4ede8] flex items-center justify-center text-[#bd5f5f] flex-shrink-0 group-hover:bg-[#bd5f5f] group-hover:text-[#f9f5ea] transition-colors">
                       <span className="material-symbols-outlined text-3xl">add_box</span>
                     </div>
                     <div className="flex-1">

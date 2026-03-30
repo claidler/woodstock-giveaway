@@ -8,7 +8,7 @@ export const WOODSTOCK_BOUNDS: [[number, number], [number, number]] = [
 ];
 
 export const CATEGORY_STYLES: Record<Category, { icon: string; bg: string }> = {
-  furniture: { icon: 'chair', bg: '#d7827e' },
+  furniture: { icon: 'chair', bg: '#bd5f5f' },
   clothing: { icon: 'apparel', bg: '#907aa9' },
   entertainment: { icon: 'movie', bg: '#ea9d34' },
   pets: { icon: 'pets', bg: '#286983' },
@@ -16,6 +16,7 @@ export const CATEGORY_STYLES: Record<Category, { icon: string; bg: string }> = {
   garden: { icon: 'yard', bg: '#56949f' },
   books: { icon: 'menu_book', bg: '#797593' },
   kitchen: { icon: 'cooking', bg: '#575279' },
+  refreshments: { icon: 'local_cafe', bg: '#e68a4f' },
 };
 
 export const categoryOptions: { id: Category; icon: string; label: string }[] = [
@@ -27,4 +28,5 @@ export const categoryOptions: { id: Category; icon: string; label: string }[] = 
   { id: 'garden', icon: 'yard', label: 'Garden' },
   { id: 'books', icon: 'menu_book', label: 'Books' },
   { id: 'kitchen', icon: 'cooking', label: 'Kitchen' },
+  { id: 'refreshments', icon: 'local_cafe', label: 'Drinks' },
 ];
