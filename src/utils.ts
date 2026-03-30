@@ -1,7 +1,9 @@
 import type { Category, GiveawayItem, GiveawayItemRow } from './types';
 
-export function formatRelativeTime(iso: string): string {
+export function formatRelativeTime(iso: string | null | undefined): string {
+  if (!iso) return 'Just now';
   const diff = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(diff)) return 'Just now';
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'Just now';
   if (mins < 60) return `${mins}m ago`;
