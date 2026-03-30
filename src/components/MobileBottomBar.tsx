@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Session } from '@supabase/supabase-js';
 import type { Category } from '../types';
 import { categoryOptions, CATEGORY_STYLES } from '../constants';
@@ -31,10 +32,10 @@ export default function MobileBottomBar({ onStartAddFlow, session, onSignOut, on
             <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-[#ea9d34] border-2 border-[#faf4ed]" />
           )}
         </button>
-        {filterOpen && (
+        {filterOpen && createPortal(
           <>
             <div className="fixed inset-0 z-[60]" onClick={() => setFilterOpen(false)} />
-            <div className="absolute left-0 bottom-full mb-3 z-[70] bg-[#faf4ed]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#ebe4df] p-4 w-56 animate-fade-in">
+            <div className="fixed left-6 bottom-24 z-[70] bg-[#faf4ed]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#ebe4df] p-4 w-56 animate-fade-in">
               <h3 className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest mb-3 px-0.5">Filter by Tag</h3>
               <div className="grid grid-cols-3 gap-1.5">
                 {allFilters.map((cat) => {
@@ -65,7 +66,8 @@ export default function MobileBottomBar({ onStartAddFlow, session, onSignOut, on
                 })}
               </div>
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
       <div onClick={onStartAddFlow} className="w-14 h-14 bg-[#d7827e] rounded-full -mt-12 flex items-center justify-center text-[#faf4ed] shadow-xl ring-4 ring-[#faf4ed] cursor-pointer active:scale-90 transition-transform">
