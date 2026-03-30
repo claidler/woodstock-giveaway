@@ -273,8 +273,7 @@ export default function App() {
         .leaflet-container { font-family: 'Inter', sans-serif; touch-action: pan-x pan-y; }
         .leaflet-control-attribution { background: rgba(255,255,255,0.6) !important; color: #9893a5; font-size: 10px; padding: 2px 6px !important; border-radius: 4px; }
         .leaflet-control-attribution a { color: #9893a5; }
-        .leaflet-bottom.leaflet-right { bottom: 1.5rem; }
-        @media (min-width: 768px) { .leaflet-bottom.leaflet-right { bottom: 0; } }
+        @media (max-width: 767px) { .leaflet-bottom.leaflet-right { bottom: -0.5rem; z-index: 0; } }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes pulse-ring { 0% { transform: scale(0.9); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
