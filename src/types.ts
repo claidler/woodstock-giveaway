@@ -1,4 +1,4 @@
-export type Category = 'furniture' | 'clothing' | 'entertainment' | 'pets' | 'kids' | 'garden' | 'books' | 'kitchen';
+export type Category = 'furniture' | 'clothing' | 'entertainment' | 'pets' | 'kids' | 'garden' | 'books' | 'kitchen' | 'refreshments';
 
 export interface GiveawayItem {
   id: string;

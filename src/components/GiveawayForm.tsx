@@ -33,7 +33,7 @@ export default function GiveawayForm({
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center animate-fade-in">
       <div className="absolute inset-0 bg-[#575279]/20 backdrop-blur-sm" onClick={onCancel} />
 
-      <div className="relative bg-[#fffaf3] w-full md:max-w-md md:mx-4 rounded-t-3xl md:rounded-3xl shadow-2xl border-t md:border border-[#ebe4df]/50 animate-slide-up max-h-[80vh] md:max-h-[85vh] flex flex-col">
+      <div className="relative bg-[#f9f5ea] w-full md:max-w-md md:mx-4 rounded-t-3xl md:rounded-3xl shadow-2xl border-t md:border border-[#ebe4df]/50 animate-slide-up max-h-[80vh] md:max-h-[85vh] flex flex-col">
         {/* Drag handle for mobile */}
         <div className="md:hidden flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 rounded-full bg-[#ebe4df]" />
@@ -71,8 +71,8 @@ export default function GiveawayForm({
                     onClick={() => toggleCategory(cat.id)}
                     className={`flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-xl border text-xs font-medium transition-all active:scale-95
                       ${selected
-                        ? 'text-[#faf4ed] shadow-sm'
-                        : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#d7827e]/30 hover:text-[#575279]'
+                        ? 'text-[#f9f5ea] shadow-sm'
+                        : 'bg-white border-[#ebe4df] text-[#575279]/70 hover:border-[#bd5f5f]/30 hover:text-[#575279]'
                       }`}
                     style={selected ? { background: catColour, borderColor: catColour } : undefined}
                   >
@@ -82,7 +82,7 @@ export default function GiveawayForm({
                 );
               })}
             </div>
-            {formErrors.categories && <p className="text-[11px] text-[#d7827e] mt-1">Please select at least one category</p>}
+            {formErrors.categories && <p className="text-[11px] text-[#bd5f5f] mt-1">Please select at least one category</p>}
           </div>
 
           {/* Description */}
@@ -94,9 +94,9 @@ export default function GiveawayForm({
               rows={3}
               value={formData.description}
               onChange={e => { onFormDataChange(d => ({ ...d, description: e.target.value })); onFormErrorChange(e2 => ({ ...e2, description: false })); }}
-              className={`w-full bg-white border ${formErrors.description ? 'border-[#d7827e] ring-1 ring-[#d7827e]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50 resize-none`}
+              className={`w-full bg-white border ${formErrors.description ? 'border-[#bd5f5f] ring-1 ring-[#bd5f5f]/30' : 'border-[#ebe4df]'} rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#bd5f5f]/30 focus:border-[#bd5f5f]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50 resize-none`}
             />
-            {formErrors.description && <p className="text-[11px] text-[#d7827e] mt-1">Please add a description</p>}
+            {formErrors.description && <p className="text-[11px] text-[#bd5f5f] mt-1">Please add a description</p>}
           </div>
 
           {/* Location hint — optional */}
@@ -107,14 +107,14 @@ export default function GiveawayForm({
               placeholder="e.g. By the front gate on Park Street"
               value={formData.locationDetails}
               onChange={e => onFormDataChange(d => ({ ...d, locationDetails: e.target.value }))}
-              className="w-full bg-white border border-[#ebe4df] rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#d7827e]/30 focus:border-[#d7827e]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50"
+              className="w-full bg-white border border-[#ebe4df] rounded-xl py-3 px-4 text-base md:text-sm focus:ring-1 focus:ring-[#bd5f5f]/30 focus:border-[#bd5f5f]/30 focus:outline-none transition-all placeholder:text-[#9893a5]/50"
             />
           </div>
 
           {/* Reposition pin */}
           <button
             onClick={onRepositionPin}
-            className="flex items-center gap-2 text-xs text-[#9893a5] hover:text-[#d7827e] active:text-[#d7827e] transition-colors py-1"
+            className="flex items-center gap-2 text-xs text-[#9893a5] hover:text-[#bd5f5f] active:text-[#bd5f5f] transition-colors py-1"
           >
             <span className="material-symbols-outlined text-base">edit_location_alt</span>
             Drag the pin or tap here to reposition
@@ -122,10 +122,10 @@ export default function GiveawayForm({
         </div>
 
         {/* Submit area */}
-        <div className="bg-[#fffaf3] px-5 md:px-6 pt-3 pb-5 md:pb-5 border-t border-[#ebe4df]/50 flex-shrink-0 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="bg-[#f9f5ea] px-5 md:px-6 pt-3 pb-5 md:pb-5 border-t border-[#ebe4df]/50 flex-shrink-0 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
           <button
             onClick={onSubmit}
-            className="w-full bg-[#d7827e] text-[#faf4ed] py-3.5 rounded-xl font-serif font-semibold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
+            className="w-full bg-[#bd5f5f] text-[#f9f5ea] py-3.5 rounded-xl font-serif font-semibold text-sm hover:opacity-90 active:scale-[0.98] transition-all shadow-sm flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-lg">check_circle</span>
             {editItem ? 'Save changes' : 'List for neighbours'}
