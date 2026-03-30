@@ -28,5 +28,5 @@ export const categoryOptions: { id: Category; icon: string; label: string }[] = 
   { id: 'garden', icon: 'yard', label: 'Garden' },
   { id: 'books', icon: 'menu_book', label: 'Books' },
   { id: 'kitchen', icon: 'cooking', label: 'Kitchen' },
-  { id: 'refreshments', icon: 'local_cafe', label: 'Drinks' },
+  { id: 'refreshments', icon: 'local_cafe', label: 'Refreshments' },
 ];

@@ -37,7 +37,7 @@ export default function MobileBottomBar({ onStartAddFlow, session, onSignOut, on
             <div className="fixed inset-0 z-[60]" onClick={() => setFilterOpen(false)} />
             <div className="fixed left-4 right-4 bottom-24 z-[70] bg-[#f9f5ea]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#ebe4df] p-4 animate-fade-in">
               <h3 className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest mb-3 px-0.5">Filter by Tag</h3>
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-4 gap-2">
                 {allFilters.map((cat) => {
                   const isActive = activeCategory === cat.id;
                   const catColour = cat.id !== 'all' ? CATEGORY_STYLES[cat.id as Category].bg : '#bd5f5f';
