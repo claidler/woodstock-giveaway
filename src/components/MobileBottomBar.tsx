@@ -34,7 +34,7 @@ export default function MobileBottomBar({ onStartAddFlow, session, onSignOut, on
         {filterOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setFilterOpen(false)} />
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 z-50 bg-[#faf4ed]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#ebe4df] p-4 w-56 animate-fade-in">
+            <div className="absolute left-0 bottom-full mb-3 z-50 bg-[#faf4ed]/95 backdrop-blur-xl rounded-2xl shadow-xl border border-[#ebe4df] p-4 w-56 animate-fade-in">
               <h3 className="text-[10px] font-bold text-[#9893a5] uppercase tracking-widest mb-3 px-0.5">Filter by Tag</h3>
               <div className="grid grid-cols-3 gap-1.5">
                 {allFilters.map((cat) => {
