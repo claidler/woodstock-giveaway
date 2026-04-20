@@ -123,11 +123,17 @@ export default function LongPressMarker({
     };
   }, [item.id, item.owner_id, userId, isMoving]);
 
+  const markerIcon = isMoving
+    ? getMovingIconForCategories(item.categories)
+    : item.categories.length > 1 && zoomLevel <= 16
+      ? getClusteredIconForCategories(item.categories)
+      : getIconForCategories(item.categories);
+
   return (
     <Marker
       ref={markerRef}
       position={[item.lat, item.lng]}
-      icon={isMoving ? getMovingIconForCategories(item.categories) : (item.categories.length > 1 && zoomLevel <= 16 ? getClusteredIconForCategories(item.categories) : getIconForCategories(item.categories))}
+      icon={markerIcon}
     >
       {!isMoving && (
         <Popup className="custom-popup" eventHandlers={{ remove: () => setConfirmingDelete(false) }}>
