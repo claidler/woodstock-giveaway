@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import type { GiveawayItem } from '../types';
-import { getIconForCategories, getMovingIconForCategories } from '../icons';
+import { getIconForCategories, getMovingIconForCategories, getClusteredIconForCategories } from '../icons';
 import { CATEGORY_STYLES } from '../constants';
 
 interface LongPressMarkerProps {
@@ -14,10 +14,11 @@ interface LongPressMarkerProps {
   onDelete: (id: string) => void;
   onEdit: (item: GiveawayItem) => void;
   userId: string | null;
+  zoomLevel: number;
 }
 
 export default function LongPressMarker({
-  item, isMoving, mapRef, onMoveStart, onMoveEnd, onDelete, onEdit, userId,
+  item, isMoving, mapRef, onMoveStart, onMoveEnd, onDelete, onEdit, userId, zoomLevel,
 }: LongPressMarkerProps) {
   const markerRef = useRef<L.Marker>(null);
   const dragging = useRef(false);
@@ -122,11 +123,17 @@ export default function LongPressMarker({
     };
   }, [item.id, item.owner_id, userId, isMoving]);
 
+  const markerIcon = isMoving
+    ? getMovingIconForCategories(item.categories)
+    : item.categories.length > 1 && zoomLevel <= 16
+      ? getClusteredIconForCategories(item.categories)
+      : getIconForCategories(item.categories);
+
   return (
     <Marker
       ref={markerRef}
       position={[item.lat, item.lng]}
-      icon={isMoving ? getMovingIconForCategories(item.categories) : getIconForCategories(item.categories)}
+      icon={markerIcon}
     >
       {!isMoving && (
         <Popup className="custom-popup" eventHandlers={{ remove: () => setConfirmingDelete(false) }}>
