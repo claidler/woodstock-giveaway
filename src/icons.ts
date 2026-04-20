@@ -46,6 +46,54 @@ export const getMovingIconForCategories = (categories: Category[]) => {
   });
 };
 
+export const getClusteredIconForCategories = (categories: Category[]) => {
+  const cats = categories.length > 0 ? categories : (['furniture'] as Category[]);
+  const count = cats.length;
+
+  if (count === 1) {
+    const cat = cats[0];
+    const s = CATEGORY_STYLES[cat] || CATEGORY_STYLES.furniture;
+    return L.divIcon({
+      className: 'bg-transparent border-none',
+      html: `<div style="position:relative;width:40px;height:40px;margin-top:-20px;margin-left:-20px;cursor:pointer;">
+        <div style="width:40px;height:40px;background:${s.bg};color:#faf4ed;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+          <span class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1;">${s.icon}</span>
+        </div>
+      </div>`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+      popupAnchor: [0, -20]
+    });
+  }
+
+  const containerSize = 48;
+  const center = containerSize / 2;
+  const sliceAngle = 360 / count;
+
+  const gradientStops = cats.map((cat, i) => {
+    const s = CATEGORY_STYLES[cat] || CATEGORY_STYLES.furniture;
+    const start = i * sliceAngle;
+    const end = (i + 1) * sliceAngle;
+    return `${s.bg} ${start}deg ${end}deg`;
+  }).join(', ');
+
+  const hubSize = 26;
+
+  return L.divIcon({
+    className: 'bg-transparent border-none',
+    html: `<div style="position:relative;width:${containerSize}px;height:${containerSize}px;margin-top:-${center}px;margin-left:-${center}px;cursor:pointer;">
+      <div style="width:${containerSize}px;height:${containerSize}px;border-radius:50%;background:conic-gradient(${gradientStops});border:2.5px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;">
+        <div style="width:${hubSize}px;height:${hubSize}px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+          <span style="font-size:12px;font-weight:700;color:#575279;font-family:Inter,sans-serif;">${count}</span>
+        </div>
+      </div>
+    </div>`,
+    iconSize: [containerSize, containerSize],
+    iconAnchor: [center, center],
+    popupAnchor: [0, -center]
+  });
+};
+
 export const dropPinIcon = L.divIcon({
   className: 'bg-transparent border-none',
   html: `

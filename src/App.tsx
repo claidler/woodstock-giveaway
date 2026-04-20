@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, AttributionControl } from 'react-leaflet';
+import { MapContainer, TileLayer, AttributionControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from './supabaseClient';
@@ -20,6 +20,17 @@ import MapRefCapture from './components/MapRefCapture';
 import AuthModal from './components/AuthModal';
 
 
+function ZoomTracker({ onZoomChange }: { onZoomChange: (zoom: number) => void }) {
+  const map = useMap();
+  useEffect(() => {
+    const handler = () => onZoomChange(map.getZoom());
+    map.on('zoomend', handler);
+    onZoomChange(map.getZoom());
+    return () => { map.off('zoomend', handler); };
+  }, [map, onZoomChange]);
+  return null;
+}
+
 export default function App() {
   const [items, setItems] = useState<GiveawayItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,6 +47,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [editingItem, setEditingItem] = useState<GiveawayItem | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(16);
 
   const handleMoveStart = useCallback((id: string) => setMovingItemId(id), []);
   const handleMoveEnd = useCallback((id: string, lat: number, lng: number) => {
@@ -314,6 +326,7 @@ export default function App() {
             />
 
             <MapRefCapture mapRef={mapRef} />
+            <ZoomTracker onZoomChange={setZoomLevel} />
             <MapClickHandler active={placingPin} onMapClick={handleMapClick} movingItemId={movingItemId} onCancelMove={() => setMovingItemId(null)} />
 
             {filteredItems.map(item => (
@@ -327,6 +340,7 @@ export default function App() {
                 onDelete={handleDelete}
                 onEdit={startEditFlow}
                 userId={session?.user.id ?? null}
+                zoomLevel={zoomLevel}
               />
             ))}
 
